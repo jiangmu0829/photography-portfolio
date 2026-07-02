@@ -659,20 +659,18 @@
   <nav class="nav" id="nav">
     <a href="#/" class="nav-brand" data-clickable>陈默</a>
     <ul class="nav-links" id="navLinks">
-      <li><a href="#/" data-clickable>首页</a></li>
+      <li><a href="#" data-clickable>首页</a></li>
       <li><a href="#/portfolio" data-clickable>作品集</a></li>
       <li><a href="#/about" data-clickable>关于我</a></li>
-      <li><a href="./admin/index.html" data-clickable>管理</a></li>
     </ul>
     <button class="nav-toggle" id="navToggle" data-clickable>☰</button>
   </nav>
 
   <div class="mobile-menu" id="mobileMenu">
     <button class="mobile-close" id="mobileClose" data-clickable>✕</button>
-    <a href="#/" data-clickable>首页</a>
+    <a href="#" data-clickable>首页</a>
     <a href="#/portfolio" data-clickable>作品集</a>
     <a href="#/about" data-clickable>关于我</a>
-    <a href="./admin/index.html" data-clickable>管理</a>
   </div>
 
   <main id="app"></main>
@@ -680,17 +678,16 @@
   <footer class="footer">
     <div class="footer-brand">陈默摄影</div>
     <div class="footer-links">
-      <a href="#/">首页</a>
+      <a href="#">首页</a>
       <a href="#/portfolio">作品集</a>
       <a href="#/about">关于我</a>
-      <a href="./admin/index.html">管理后台</a>
     </div>
     <div class="footer-copy">© 2024 陈默 · 保留所有权利</div>
   </footer>
 
   <script>
     /* ==================== Default Data ==================== */
-    const defaultPhotographer = {
+    const defaultProfile = {
       name: "陈默",
       role: "独立摄影师",
       bio: "陈默，独立摄影师，现居上海。专注于人像、风光与纪实摄影，致力于用镜头捕捉生活中稍纵即逝的光影与情感。从繁华都市的街头巷尾，到远离喧嚣的自然秘境，他的镜头始终对准那些容易被忽视却充满力量的瞬间。\n\n2015年开始全职摄影生涯，作品曾入选多个国内外摄影展，并与多家知名媒体及品牌建立长期合作。他相信，好的照片不是技术的炫耀，而是情感的传递。每一次快门，都是他与这个世界的一次真诚对话。",
@@ -769,7 +766,7 @@
 
     function getDefaultData() {
       return {
-        photographer: JSON.parse(JSON.stringify(defaultPhotographer)),
+        profile: JSON.parse(JSON.stringify(defaultProfile)),
         works: JSON.parse(JSON.stringify(defaultWorks)),
         categories: JSON.parse(JSON.stringify(defaultCategories))
       };
@@ -783,7 +780,7 @@
       if (raw) {
         try {
           appData = JSON.parse(raw);
-          if (!appData.photographer || !appData.works || !appData.categories) throw new Error('invalid');
+          if (!appData.profile || !appData.works || !appData.categories) throw new Error('invalid');
         } catch (e) {
           appData = getDefaultData();
           saveData();
@@ -798,7 +795,7 @@
       localStorage.setItem('siteData', JSON.stringify(appData));
     }
 
-    function getPhotographer() { return appData.photographer; }
+    function getPhotographer() { return appData.profile; }
     function getWorks() { return appData.works || []; }
     function getCategories() { return appData.categories || defaultCategories; }
     function getWorkById(id) { return getWorks().find(w => w.id === id); }

@@ -328,6 +328,84 @@
   .dist-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
   .dist-bar-value { width: 30px; font-size: 12px; color: var(--text-muted); text-align: right; flex-shrink: 0; }
 
+  /* Gallery Tabs */
+  .gallery-tabs { display: flex; gap: 8px; }
+  .gallery-tab {
+    padding: 6px 14px; border-radius: var(--radius);
+    font-size: 13px; cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+  }
+  .gallery-tab:hover { color: var(--text); background: var(--bg-hover); }
+  .gallery-tab.active { color: var(--gold); background: var(--gold-dim); }
+
+  /* Gallery View */
+  .gallery-view { display: none; }
+  .gallery-view.active { display: block; }
+
+  /* Category filter */
+  .category-filter {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .category-btn {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 13px; cursor: pointer;
+    transition: all var(--transition);
+  }
+  .category-btn:hover { border-color: var(--gold); color: var(--text); }
+  .category-btn.active {
+    border-color: var(--gold); color: var(--gold); background: var(--gold-dim);
+  }
+  .category-btn.portrait.active { border-color: #D4A853; color: #D4A853; background: #D4A85320; }
+  .category-btn.landscape.active { border-color: #53A0D4; color: #53A0D4; background: #53A0D420; }
+  .category-btn.documentary.active { border-color: #53D4A0; color: #53D4A0; background: #53D4A020; }
+  .category-btn.commercial.active { border-color: #D453B8; color: #D453B8; background: #D453B820; }
+
+  /* Image grid */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 1200px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 768px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+  .gallery-item {
+    position: relative;
+    aspect-ratio: 4/3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    transition: all var(--transition);
+  }
+  .gallery-item:hover {
+    border-color: var(--border-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  .gallery-item:hover img { transform: scale(1.05); }
+  .gallery-item-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex; flex-direction: column;
+    justify-content: flex-end;
+    padding: 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .gallery-item:hover .gallery-item-overlay { opacity: 1; }
+  .gallery-item-title { font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+  .gallery-item-date { font-size: 12px; color: rgba(255,255,255,0.7); }
+
   /* Empty state */
   .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
   .empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; color: var(--border-light); }
@@ -365,6 +443,10 @@
       <div class="nav-item" data-page="works" onclick="switchPage('works')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <span>作品管理</span>
+      </div>
+      <div class="nav-item" data-page="gallery" onclick="switchPage('gallery')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
+        <span>分类画廊</span>
       </div>
       <div class="nav-item" data-page="profile" onclick="switchPage('profile')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -479,6 +561,50 @@
         </div>
       </div>
 
+      <!-- Gallery -->
+      <div class="page" id="page-gallery">
+        <div class="card">
+          <div class="card-header">
+            <h2>分类画廊</h2>
+            <div class="gallery-tabs">
+              <div class="gallery-tab active" data-view="grid" onclick="switchGalleryView('grid')">网格视图</div>
+              <div class="gallery-tab" data-view="table" onclick="switchGalleryView('table')">列表视图</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="category-filter" id="galleryFilter">
+              <button class="category-btn active" data-cat="all" onclick="filterGallery('all')">全部</button>
+              <button class="category-btn portrait" data-cat="portrait" onclick="filterGallery('portrait')">人像</button>
+              <button class="category-btn landscape" data-cat="landscape" onclick="filterGallery('landscape')">风光</button>
+              <button class="category-btn documentary" data-cat="documentary" onclick="filterGallery('documentary')">纪实</button>
+              <button class="category-btn commercial" data-cat="commercial" onclick="filterGallery('commercial')">商业</button>
+            </div>
+            <div class="gallery-view active" id="galleryGridView">
+              <div class="gallery-grid" id="galleryGrid"></div>
+            </div>
+            <div class="gallery-view" id="galleryTableView" style="display:none;">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:60px">缩略图</th>
+                      <th>标题</th>
+                      <th>分类</th>
+                      <th>拍摄日期</th>
+                      <th>地点</th>
+                      <th>相机</th>
+                      <th>镜头</th>
+                      <th style="width:100px">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="galleryTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Profile -->
       <div class="page" id="page-profile">
         <div class="card">
@@ -514,7 +640,7 @@
                 <div class="upload-area" id="avatarUpload" onclick="document.getElementById('avatarInput').click()">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   <p>点击或拖拽上传头像</p>
-                  <p class="hint">建议尺寸 400×400px</p>
+                  <p class="hint">建议尺寸 400×400px，自动压缩</p>
                   <img id="avatarPreview" class="upload-preview" style="display:none;" alt="">
                   <p class="upload-file-name" id="avatarFileName"></p>
                 </div>
@@ -525,7 +651,7 @@
                 <div class="upload-area" id="heroUpload" onclick="document.getElementById('heroInput').click()">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   <p>点击或拖拽上传 Hero 背景图</p>
-                  <p class="hint">建议宽度 1920px 以上</p>
+                  <p class="hint">建议宽度 1920px 以上，自动压缩</p>
                   <img id="heroPreview" class="upload-preview" style="display:none;" alt="">
                   <p class="upload-file-name" id="heroFileName"></p>
                 </div>
@@ -626,7 +752,7 @@
         <div class="upload-area" id="workUpload" onclick="document.getElementById('workInput').click()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           <p>点击或拖拽上传图片</p>
-          <p class="hint">支持 JPG、PNG、WebP</p>
+          <p class="hint">支持 JPG、PNG、WebP，自动压缩至 1200px</p>
           <img id="workPreview" class="upload-preview" style="display:none;" alt="">
           <p class="upload-file-name" id="workFileName"></p>
         </div>
@@ -744,6 +870,8 @@ let editingWorkId = null;
 let tempAvatar = null;
 let tempHero = null;
 let tempWorkImage = null;
+let galleryFilter = 'all';
+let galleryView = 'grid';
 
 function loadData() {
   try {
@@ -766,7 +894,14 @@ function loadData() {
 
 function saveToStorage(notify = true) {
   try {
-    localStorage.setItem('siteData', JSON.stringify(siteData));
+    const dataStr = JSON.stringify(siteData);
+    const sizeBytes = new Blob([dataStr]).size;
+    const sizeMB = sizeBytes / 1024 / 1024;
+    if (sizeMB > 4) {
+      toast('数据大小超过 4MB，无法保存到 localStorage。请删除一些图片或降低图片质量。', 'error');
+      throw new Error('Data size exceeds 4MB');
+    }
+    localStorage.setItem('siteData', dataStr);
     document.getElementById('lastSaved').textContent = '已保存 ' + new Date().toLocaleTimeString();
     if (notify) {
       window.dispatchEvent(new StorageEvent('storage', { key: 'siteData' }));
@@ -782,7 +917,9 @@ function saveData() {
     saveToStorage(true);
     toast('数据已保存到 localStorage', 'success');
   } catch (e) {
-    toast('保存失败', 'error');
+    if (e.message !== 'Data size exceeds 4MB') {
+      toast('保存失败', 'error');
+    }
   }
 }
 
@@ -807,6 +944,7 @@ function toast(message, type = 'info') {
 const pageTitles = {
   dashboard: '仪表盘',
   works: '作品管理',
+  gallery: '分类画廊',
   profile: '个人资料',
   data: '数据管理'
 };
@@ -820,6 +958,7 @@ function switchPage(page) {
   document.getElementById('sidebar').classList.remove('open');
   if (page === 'dashboard') renderDashboard();
   if (page === 'works') renderWorks();
+  if (page === 'gallery') renderGallery();
   if (page === 'profile') renderProfile();
   window.scrollTo(0, 0);
 }
@@ -886,7 +1025,6 @@ function renderWorks() {
   }
   tbody.innerHTML = works.map(w => {
     const img = w.thumb || w.image || '';
-    const isBase64 = img.startsWith('data:');
     const src = img;
     return `<tr>
       <td><img class="table-thumb" src="${src}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'table-thumb error\\'>无图</div>'"></td>
@@ -961,7 +1099,22 @@ function editWork(id) {
 
 function saveWork() {
   const title = document.getElementById('wTitle').value.trim();
-  if (!title) return toast('请输入作品标题', 'error');
+  const hasNewImage = !!tempWorkImage;
+  const hasBase64 = !!document.getElementById('wImageBase64').value;
+  let hasExistingImage = false;
+  if (editingWorkId) {
+    const existing = (siteData.works || []).find(w => w.id === editingWorkId);
+    hasExistingImage = existing && !!(existing.image || existing.thumb);
+  }
+  const hasImage = hasNewImage || hasBase64 || hasExistingImage;
+
+  if (!title && !hasImage) {
+    return toast('请填写作品标题并上传图片', 'error');
+  }
+  if (!title) {
+    return toast('请输入作品标题', 'error');
+  }
+
   const category = document.getElementById('wCategory').value;
   const description = document.getElementById('wDescription').value.trim();
   const date = document.getElementById('wDate').value;
@@ -1004,63 +1157,96 @@ function saveWork() {
   }
   saveDataSilent();
   closeWorkModal();
-  renderWorks();
+  renderAll();
 }
 
 function deleteWork(id) {
   if (!confirm('确定要删除这张作品吗？')) return;
   siteData.works = (siteData.works || []).filter(w => w.id !== id);
   saveDataSilent();
-  renderWorks();
+  renderAll();
   toast('作品已删除', 'success');
 }
 
-// ==================== File Uploads ====================
-function readFileAsBase64(file, callback) {
-  if (!file) return;
-  if (!file.type.startsWith('image/')) {
-    toast('请选择图片文件', 'error'); return;
+// ==================== Image Compression ====================
+function compressImage(file, maxWidth, quality, callback) {
+  if (!file || !file.type.startsWith('image/')) {
+    toast('请选择图片文件', 'error');
+    return;
   }
+
   const reader = new FileReader();
-  reader.onload = e => callback(e.target.result, file.name);
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round(height * (maxWidth / width));
+        width = maxWidth;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      function tryExport(q) {
+        const base64 = canvas.toDataURL('image/jpeg', Math.max(0.1, q));
+        const sizeKB = Math.round(base64.length / 1024);
+        if (sizeKB > 200 && q > 0.3) {
+          tryExport(q - 0.05);
+        } else {
+          callback(base64, file.name, sizeKB);
+        }
+      }
+
+      tryExport(quality);
+    };
+    img.onerror = () => toast('图片加载失败', 'error');
+    img.src = e.target.result;
+  };
   reader.onerror = () => toast('文件读取失败', 'error');
   reader.readAsDataURL(file);
+}
+
+// ==================== File Uploads ====================
+function handleWorkUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  compressImage(file, 1200, 0.7, (base64, name, sizeKB) => {
+    tempWorkImage = base64;
+    document.getElementById('workPreview').src = base64;
+    document.getElementById('workPreview').style.display = 'block';
+    document.getElementById('wImageBase64').value = base64;
+    document.getElementById('workFileName').textContent = `${name} (${sizeKB}KB)`;
+    toast('图片已压缩并加载', 'success');
+  });
 }
 
 function handleAvatarUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  readFileAsBase64(file, (base64, name) => {
+  compressImage(file, 400, 0.8, (base64, name, sizeKB) => {
     tempAvatar = base64;
     document.getElementById('avatarPreview').src = base64;
     document.getElementById('avatarPreview').style.display = 'block';
-    document.getElementById('avatarFileName').textContent = name;
-    toast('头像已加载', 'success');
+    document.getElementById('avatarFileName').textContent = `${name} (${sizeKB}KB)`;
+    toast('头像已压缩并加载', 'success');
   });
 }
 
 function handleHeroUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  readFileAsBase64(file, (base64, name) => {
+  compressImage(file, 1200, 0.7, (base64, name, sizeKB) => {
     tempHero = base64;
     document.getElementById('heroPreview').src = base64;
     document.getElementById('heroPreview').style.display = 'block';
-    document.getElementById('heroFileName').textContent = name;
-    toast('背景图已加载', 'success');
-  });
-}
-
-function handleWorkUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  readFileAsBase64(file, (base64, name) => {
-    tempWorkImage = base64;
-    document.getElementById('workPreview').src = base64;
-    document.getElementById('workPreview').style.display = 'block';
-    document.getElementById('wImageBase64').value = base64;
-    document.getElementById('workFileName').textContent = name;
-    toast('图片已加载', 'success');
+    document.getElementById('heroFileName').textContent = `${name} (${sizeKB}KB)`;
+    toast('背景图已压缩并加载', 'success');
   });
 }
 
@@ -1081,6 +1267,75 @@ function setupDragDrop(areaId, inputId) {
       input.dispatchEvent(new Event('change', { bubbles: true }));
     }
   });
+}
+
+// ==================== Gallery ====================
+function switchGalleryView(view) {
+  galleryView = view;
+  document.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.gallery-tab[data-view="${view}"]`).classList.add('active');
+  if (view === 'grid') {
+    document.getElementById('galleryGridView').style.display = 'block';
+    document.getElementById('galleryTableView').style.display = 'none';
+    document.getElementById('galleryFilter').style.display = 'flex';
+  } else {
+    document.getElementById('galleryGridView').style.display = 'none';
+    document.getElementById('galleryTableView').style.display = 'block';
+    document.getElementById('galleryFilter').style.display = 'none';
+  }
+  renderGallery();
+}
+
+function filterGallery(cat) {
+  galleryFilter = cat;
+  document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.category-btn[data-cat="${cat}"]`).classList.add('active');
+  renderGallery();
+}
+
+function renderGallery() {
+  const allWorks = siteData.works || [];
+  const filtered = galleryFilter === 'all' ? allWorks : allWorks.filter(w => w.category === galleryFilter);
+
+  if (galleryView === 'grid') {
+    const grid = document.getElementById('galleryGrid');
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p>该分类暂无作品</p></div>';
+      return;
+    }
+    grid.innerHTML = filtered.map(w => {
+      const img = w.image || w.thumb || '';
+      return `<div class="gallery-item" onclick="editWork('${w.id}')">
+        <img src="${img}" alt="${w.title}" loading="lazy" onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(135deg,#1a1a1a,#0d0d0d)'">
+        <div class="gallery-item-overlay">
+          <div class="gallery-item-title">${w.title || '未命名'}</div>
+          <div class="gallery-item-date">${w.date || ''} · ${CATEGORIES[w.category] || w.category}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    const tbody = document.getElementById('galleryTable');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>该分类暂无作品</p></td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.map(w => {
+      const img = w.thumb || w.image || '';
+      return `<tr>
+        <td><img class="table-thumb" src="${img}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'table-thumb error\\'>无图</div>'"></td>
+        <td>${w.title || '-'}</td>
+        <td><span class="badge ${BADGE_CLASSES[w.category] || 'badge-gold'}">${CATEGORIES[w.category] || w.category}</span></td>
+        <td>${w.date || '-'}</td>
+        <td>${w.location || '-'}</td>
+        <td>${w.camera || '-'}</td>
+        <td>${w.lens || '-'}</td>
+        <td class="table-actions">
+          <button class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
 }
 
 // ==================== Profile ====================
@@ -1216,6 +1471,7 @@ function renderAll() {
     const pageId = currentPage.id.replace('page-', '');
     if (pageId === 'dashboard') renderDashboard();
     if (pageId === 'works') renderWorks();
+    if (pageId === 'gallery') renderGallery();
     if (pageId === 'profile') renderProfile();
   }
 }
