@@ -825,7 +825,14 @@ const defaultProfile = {
   avatar: "./author-avatar.jpg",
   heroImage: "./work-01.jpg",
   heroTitle: "陈默",
-  heroSubtitle: "独立摄影师 / 用镜头叙述光影"
+  heroSubtitle: "独立摄影师 / 用镜头叙述光影",
+  philosophy: "摄影于我，不是记录现实的工具，而是理解世界的方式。每一张照片都是一次选择——选择看见什么，选择忽略什么，选择在哪个瞬间按下快门。",
+  social: [
+    { name: "微博", url: "https://weibo.com" },
+    { name: "Instagram", url: "https://instagram.com" },
+    { name: "小红书", url: "https://xiaohongshu.com" },
+    { name: "Behance", url: "https://behance.net" }
+  ]
 };
 
 const defaultWorks = [
@@ -897,8 +904,8 @@ function saveToStorage(notify = true) {
     const dataStr = JSON.stringify(siteData);
     const sizeBytes = new Blob([dataStr]).size;
     const sizeMB = sizeBytes / 1024 / 1024;
-    if (sizeMB > 4) {
-      toast('数据大小超过 4MB，无法保存到 localStorage。请删除一些图片或降低图片质量。', 'error');
+    if (sizeMB > 5) {
+      toast('数据大小超过 5MB，无法保存到 localStorage。请删除一些图片或降低图片质量。', 'error');
       throw new Error('Data size exceeds 4MB');
     }
     localStorage.setItem('siteData', dataStr);
@@ -924,7 +931,7 @@ function saveData() {
 }
 
 function saveDataSilent() {
-  try { saveToStorage(true); } catch (e) {}
+  try { saveToStorage(true); return true; } catch (e) { return false; }
 }
 
 // ==================== Toast ====================
@@ -1144,7 +1151,6 @@ function saveWork() {
       id: newId, title, category, image, thumb, description,
       date, location, camera, lens
     });
-    toast('作品已添加', 'success');
   } else {
     const idx = siteData.works.findIndex(w => w.id === editingWorkId);
     if (idx >= 0) {
@@ -1152,10 +1158,13 @@ function saveWork() {
         ...siteData.works[idx], title, category, image, thumb, description,
         date, location, camera, lens
       };
-      toast('作品已更新', 'success');
     }
   }
-  saveDataSilent();
+  if (saveDataSilent()) {
+    toast(!editingWorkId ? '作品已添加' : '作品已更新', 'success');
+  } else {
+    toast('保存失败，请检查数据大小', 'error');
+  }
   closeWorkModal();
   renderAll();
 }
@@ -1392,8 +1401,11 @@ function saveProfile() {
   if (tempAvatar) p.avatar = tempAvatar;
   if (tempHero) p.heroImage = tempHero;
   siteData.profile = p;
-  saveDataSilent();
-  toast('个人资料已保存', 'success');
+  if (saveDataSilent()) {
+    toast('个人资料已保存', 'success');
+  } else {
+    toast('个人资料保存失败，请检查数据大小', 'error');
+  }
 }
 
 // ==================== Data Management ====================
