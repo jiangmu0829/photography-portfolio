@@ -263,6 +263,35 @@
   }
   .upload-file-name { font-size: 12px; color: var(--gold); margin-top: 8px; }
 
+  /* Crop controls */
+  .crop-controls {
+    margin-top: 12px;
+    display: none;
+  }
+  .crop-controls.active { display: block; }
+  .crop-ratio-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .crop-ratio-select {
+    width: 100%; padding: 8px 12px;
+    background: var(--bg-input); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; font-family: inherit;
+    transition: border-color var(--transition);
+  }
+  .crop-ratio-select:focus {
+    outline: none; border-color: var(--gold);
+  }
+  .crop-hint {
+    font-size: 11px; color: var(--text-muted); margin-top: 4px;
+  }
+
   /* Modal */
   .modal-overlay {
     position: fixed; inset: 0; z-index: 200;
@@ -668,6 +697,19 @@
                 <input type="text" id="pHeroSubtitle" placeholder="独立摄影师 / 用镜头叙述光影">
               </div>
             </div>
+            <div class="form-group">
+              <label>摄影理念</label>
+              <textarea id="pPhilosophy" placeholder="摄影于我，不是记录现实的工具，而是理解世界的方式..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>社交媒体</label>
+              <textarea id="pSocial" placeholder="每行一个：名称, URL
+例如：
+微博, https://weibo.com
+Instagram, https://instagram.com
+小红书, https://xiaohongshu.com"></textarea>
+              <p class="hint">每行一个，格式：名称, URL</p>
+            </div>
             <div style="margin-top:8px;">
               <button class="btn btn-primary" onclick="saveProfile()">保存个人资料</button>
             </div>
@@ -757,6 +799,16 @@
           <p class="upload-file-name" id="workFileName"></p>
         </div>
         <input type="file" id="workInput" accept="image/*" style="display:none" onchange="handleWorkUpload(event)">
+        <div class="crop-controls" id="workCropControls">
+          <label class="crop-ratio-label">裁剪比例</label>
+          <select class="crop-ratio-select" id="workCropRatio" onchange="reprocessWorkImage()">
+            <option value="3/4">3:4 (竖构图 / 作品默认)</option>
+            <option value="16/9">16:9 (横构图 / Hero)</option>
+            <option value="1/1">1:1 (方形 / 头像)</option>
+            <option value="original">原始比例 (不裁剪)</option>
+          </select>
+          <p class="crop-hint">自动居中裁剪，按最大边压缩至 1200px</p>
+        </div>
         <input type="hidden" id="wImageBase64">
       </div>
       <div class="form-row-3">
@@ -877,6 +929,7 @@ let editingWorkId = null;
 let tempAvatar = null;
 let tempHero = null;
 let tempWorkImage = null;
+let tempWorkFile = null;
 let galleryFilter = 'all';
 let galleryView = 'grid';
 
@@ -1065,6 +1118,9 @@ function openWorkModal() {
   document.getElementById('workPreview').src = '';
   document.getElementById('workFileName').textContent = '';
   tempWorkImage = null;
+  tempWorkFile = null;
+  document.getElementById('workCropControls').classList.remove('active');
+  document.getElementById('workCropRatio').value = '3/4';
   document.getElementById('workModal').classList.add('open');
 }
 
@@ -1177,30 +1233,53 @@ function deleteWork(id) {
   toast('作品已删除', 'success');
 }
 
-// ==================== Image Compression ====================
-function compressImage(file, maxWidth, quality, callback) {
+// ==================== Image Compression & Crop ====================
+function compressAndCropImage(file, options, callback) {
   if (!file || !file.type.startsWith('image/')) {
     toast('请选择图片文件', 'error');
     return;
   }
+
+  const maxWidth = options.maxWidth || 1200;
+  const aspectRatio = options.aspectRatio || null;
+  const quality = options.quality || 0.7;
 
   const reader = new FileReader();
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
       let { width, height } = img;
-      if (width > maxWidth) {
-        height = Math.round(height * (maxWidth / width));
-        width = maxWidth;
+      let sx = 0, sy = 0, sw = width, sh = height;
+
+      // Center crop to target aspect ratio
+      if (aspectRatio) {
+        const currentRatio = width / height;
+        if (currentRatio > aspectRatio) {
+          // Image is wider than target — crop width
+          sw = height * aspectRatio;
+          sx = (width - sw) / 2;
+        } else {
+          // Image is taller than target — crop height
+          sh = width / aspectRatio;
+          sy = (height - sh) / 2;
+        }
+      }
+
+      // Resize to maxWidth
+      let targetWidth = sw;
+      let targetHeight = sh;
+      if (targetWidth > maxWidth) {
+        targetWidth = maxWidth;
+        targetHeight = targetWidth / (sw / sh);
       }
 
       const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = Math.round(targetWidth);
+      canvas.height = Math.round(targetHeight);
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
       function tryExport(q) {
         const base64 = canvas.toDataURL('image/jpeg', Math.max(0.1, q));
@@ -1222,40 +1301,55 @@ function compressImage(file, maxWidth, quality, callback) {
 }
 
 // ==================== File Uploads ====================
-function handleWorkUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  compressImage(file, 1200, 0.7, (base64, name, sizeKB) => {
+function processWorkImage(file, aspectRatio) {
+  compressAndCropImage(file, { maxWidth: 1200, aspectRatio: aspectRatio, quality: 0.7 }, (base64, name, sizeKB) => {
     tempWorkImage = base64;
     document.getElementById('workPreview').src = base64;
     document.getElementById('workPreview').style.display = 'block';
     document.getElementById('wImageBase64').value = base64;
     document.getElementById('workFileName').textContent = `${name} (${sizeKB}KB)`;
-    toast('图片已压缩并加载', 'success');
+    toast('图片已处理', 'success');
   });
+}
+
+function reprocessWorkImage() {
+  if (!tempWorkFile) return;
+  const ratioVal = document.getElementById('workCropRatio').value;
+  const ar = ratioVal === 'original' ? null : eval(ratioVal);
+  processWorkImage(tempWorkFile, ar);
+}
+
+function handleWorkUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  tempWorkFile = file;
+  const ratioVal = document.getElementById('workCropRatio').value;
+  const ar = ratioVal === 'original' ? null : eval(ratioVal);
+  processWorkImage(file, ar);
+  document.getElementById('workCropControls').classList.add('active');
 }
 
 function handleAvatarUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  compressImage(file, 400, 0.8, (base64, name, sizeKB) => {
+  compressAndCropImage(file, { maxWidth: 400, aspectRatio: 1, quality: 0.8 }, (base64, name, sizeKB) => {
     tempAvatar = base64;
     document.getElementById('avatarPreview').src = base64;
     document.getElementById('avatarPreview').style.display = 'block';
     document.getElementById('avatarFileName').textContent = `${name} (${sizeKB}KB)`;
-    toast('头像已压缩并加载', 'success');
+    toast('头像已处理 (1:1 居中裁剪)', 'success');
   });
 }
 
 function handleHeroUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  compressImage(file, 1200, 0.7, (base64, name, sizeKB) => {
+  compressAndCropImage(file, { maxWidth: 1920, aspectRatio: 16/9, quality: 0.7 }, (base64, name, sizeKB) => {
     tempHero = base64;
     document.getElementById('heroPreview').src = base64;
     document.getElementById('heroPreview').style.display = 'block';
     document.getElementById('heroFileName').textContent = `${name} (${sizeKB}KB)`;
-    toast('背景图已压缩并加载', 'success');
+    toast('背景图已处理 (16:9 居中裁剪)', 'success');
   });
 }
 
@@ -1357,6 +1451,11 @@ function renderProfile() {
   document.getElementById('pLocation').value = p.location || '';
   document.getElementById('pHeroTitle').value = p.heroTitle || '';
   document.getElementById('pHeroSubtitle').value = p.heroSubtitle || '';
+  document.getElementById('pPhilosophy').value = p.philosophy || '';
+
+  const socialLines = (p.social || []).map(s => `${s.name}, ${s.url}`).join('\n');
+  document.getElementById('pSocial').value = socialLines;
+
   tempAvatar = null;
   tempHero = null;
 
@@ -1398,6 +1497,21 @@ function saveProfile() {
   p.location = document.getElementById('pLocation').value.trim();
   p.heroTitle = document.getElementById('pHeroTitle').value.trim();
   p.heroSubtitle = document.getElementById('pHeroSubtitle').value.trim();
+  p.philosophy = document.getElementById('pPhilosophy').value.trim();
+
+  const socialText = document.getElementById('pSocial').value.trim();
+  if (socialText) {
+    p.social = socialText.split('\n').map(line => {
+      const idx = line.indexOf(',');
+      if (idx > 0) {
+        return { name: line.slice(0, idx).trim(), url: line.slice(idx + 1).trim() };
+      }
+      return null;
+    }).filter(Boolean);
+  } else {
+    p.social = [];
+  }
+
   if (tempAvatar) p.avatar = tempAvatar;
   if (tempHero) p.heroImage = tempHero;
   siteData.profile = p;

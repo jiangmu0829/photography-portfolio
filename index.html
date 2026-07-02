@@ -83,7 +83,8 @@
     }
     img.loaded { opacity: 1; }
     .img-fallback {
-      background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%) !important;
+      background-image: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%) !important;
+      background-color: #0d0d0d !important;
       position: relative;
       overflow: hidden;
     }
@@ -1200,6 +1201,22 @@
         try {
           appData = JSON.parse(raw);
           if (!appData.profile || !appData.works || !appData.categories) throw new Error('invalid');
+          // Backfill missing profile fields
+          const dp = defaultProfile;
+          const p = appData.profile;
+          if (!p.name) p.name = dp.name;
+          if (!p.role) p.role = dp.role;
+          if (!p.bio) p.bio = dp.bio;
+          if (!p.email) p.email = dp.email;
+          if (!p.location) p.location = dp.location;
+          if (!p.avatar) p.avatar = dp.avatar;
+          if (!p.heroImage) p.heroImage = dp.heroImage;
+          if (!p.heroTitle) p.heroTitle = dp.heroTitle;
+          if (!p.heroSubtitle) p.heroSubtitle = dp.heroSubtitle;
+          if (!p.philosophy) p.philosophy = dp.philosophy;
+          if (!p.social) p.social = JSON.parse(JSON.stringify(dp.social));
+          if (!appData.works) appData.works = JSON.parse(JSON.stringify(defaultWorks));
+          if (!appData.categories) appData.categories = JSON.parse(JSON.stringify(defaultCategories));
         } catch (e) {
           appData = getDefaultData();
           saveData();
@@ -1270,6 +1287,7 @@
       updateNavActive();
       window.scrollTo(0, 0);
       setupImages();
+      setupHeroBg();
       setupCursorHover();
       setupScrollReveal();
     }
@@ -1287,6 +1305,7 @@
 
     /* ==================== Renderers ==================== */
     function renderHome(container) {
+      container.innerHTML = '';
       const p = getPhotographer();
       const works = getWorks().slice(0, 12);
       const cats = getCategories();
@@ -1304,7 +1323,7 @@
       page.className = 'page';
       page.innerHTML = `
         <section class="hero">
-          <div class="hero-bg img-fallback" id="heroBg" style="background-image:url('${p.heroImage || p.avatar}')"></div>
+          <div class="hero-bg" id="heroBg" style="background-image:url('${p.heroImage || p.avatar}')"></div>
           <div class="hero-overlay"></div>
           <div class="hero-content">
             <h1 class="hero-title">${p.heroTitle || p.name}</h1>
@@ -1429,6 +1448,7 @@
     }
 
     function renderPortfolio(container) {
+      container.innerHTML = '';
       const cats = getCategories();
       const allWorks = getWorks();
       const filtered = allWorks.filter(w => currentFilter === 'all' || w.category === currentFilter);
@@ -1476,6 +1496,7 @@
     }
 
     function renderWorkDetail(container, id) {
+      container.innerHTML = '';
       const work = getWorkById(id);
       if (!work) {
         window.location.hash = '#/portfolio';
@@ -1544,6 +1565,7 @@
     }
 
     function renderAbout(container) {
+      container.innerHTML = '';
       const p = getPhotographer();
       const bioParagraphs = p.bio.split('\n').filter(s => s.trim());
       const philosophy = p.philosophy || defaultProfile.philosophy;
@@ -1602,6 +1624,17 @@
           });
         }
       });
+    }
+
+    function setupHeroBg() {
+      const heroBg = document.getElementById('heroBg');
+      if (!heroBg) return;
+      const img = new Image();
+      img.onload = () => { heroBg.classList.remove('img-fallback'); };
+      img.onerror = () => { heroBg.classList.add('img-fallback'); };
+      const style = heroBg.style.backgroundImage;
+      const url = style.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+      if (url && url !== 'none') img.src = url;
     }
 
     function setupCursor() {
