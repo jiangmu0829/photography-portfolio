@@ -824,7 +824,7 @@
     }
 
     function render() {
-      const hash = window.location.hash.replace('#', '') || '/';
+      const hash = window.location.hash.replace('#', '').split('?')[0] || '/';
       const parts = hash.split('/').filter(Boolean);
       const page = parts[0] || 'home';
       const app = document.getElementById('app');
@@ -843,7 +843,7 @@
     }
 
     function updateNavActive() {
-      const hash = window.location.hash.replace('#', '') || '/';
+      const hash = window.location.hash.replace('#', '').split('?')[0] || '/';
       const parts = hash.split('/').filter(Boolean);
       const page = parts[0] || 'home';
       document.querySelectorAll('.nav-links a').forEach(a => {
