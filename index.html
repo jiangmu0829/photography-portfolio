@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>陈默 · 摄影作品集</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0A0A;
+      --bg-elevated: #111111;
+      --gold: #D4A853;
+      --gold-dim: rgba(212,168,83,0.15);
+      --text: #EAEAEA;
+      --text-muted: #888888;
+      --text-dim: #555555;
+      --border: rgba(212,168,83,0.2);
+      --font-sans: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+      --font-serif: 'Noto Serif SC', 'Georgia', serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Custom cursor — desktop only */
+    @media (hover: hover) and (pointer: fine) {
+      body, a, button, [data-clickable] { cursor: none; }
+      .cursor-dot {
+        width: 6px; height: 6px;
+        background: var(--gold);
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 99999;
+        transform: translate(-50%, -50%);
+        transition: transform 0.08s ease-out, opacity 0.2s;
+      }
+      .cursor-ring {
+        width: 32px; height: 32px;
+        border: 1px solid rgba(212,168,83,0.5);
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 99998;
+        transform: translate(-50%, -50%);
+        transition: transform 0.15s ease-out, width 0.2s, height 0.2s, border-color 0.2s;
+      }
+      .cursor-hover .cursor-ring {
+        width: 48px; height: 48px;
+        border-color: rgba(212,168,83,0.8);
+        background: rgba(212,168,83,0.05);
+      }
+    }
+
+    /* Image fallback gradient */
+    .img-fallback {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .img-fallback::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, transparent 40%, rgba(212,168,83,0.03) 50%, transparent 60%);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 24px 5vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0) 100%);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      transition: background 0.3s;
+    }
+    .nav.scrolled {
+      background: rgba(10,10,10,0.95);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+    .nav-brand {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      transition: color 0.3s;
+      position: relative;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 1px;
+      background: var(--gold);
+      transition: width 0.3s;
+    }
+    .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--gold);
+      font-size: 1.5rem;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 60px 5vw 40px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      text-align: center;
+    }
+    .footer-brand {
+      font-family: var(--font-serif);
+      color: var(--gold);
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      letter-spacing: 0.1em;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      transition: color 0.3s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-copy {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+    }
+
+    /* Page transitions */
+    .page {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Home Hero */
+    .hero {
+      height: 100vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.6);
+      transition: transform 8s ease;
+    }
+    .hero:hover .hero-bg { transform: scale(1.03); }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.1) 40%, rgba(10,10,10,0.8) 100%);
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 0 5vw;
+    }
+    .hero-title {
+      font-family: var(--font-serif);
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      color: var(--text);
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+    }
+    .hero-subtitle {
+      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      color: var(--text-muted);
+      font-weight: 300;
+      letter-spacing: 0.1em;
+    }
+    .hero-scroll {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      animation: bounce 2s infinite;
+    }
+    .hero-scroll svg {
+      width: 24px; height: 24px;
+      stroke: var(--gold);
+      stroke-width: 1.5;
+      fill: none;
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+      40% { transform: translateX(-50%) translateY(-10px); }
+      60% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    /* Sections */
+    .section {
+      padding: 100px 5vw;
+    }
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 60px;
+      letter-spacing: 0.1em;
+      font-weight: 500;
+    }
+
+    /* Featured grid */
+    .featured-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .work-card {
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-elevated);
+      border-radius: 4px;
+      aspect-ratio: 4/5;
+    }
+    .work-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease, opacity 0.3s;
+      display: block;
+    }
+    .work-card:hover img { transform: scale(1.05); }
+    .work-card .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(10,10,10,0.8) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 24px;
+    }
+    .work-card:hover .overlay { opacity: 1; }
+    .overlay-title { font-family: var(--font-serif); font-size: 1.1rem; color: var(--text); margin-bottom: 4px; }
+    .overlay-cat { font-size: 0.75rem; color: var(--gold); letter-spacing: 0.05em; }
+
+    /* Quote */
+    .quote-section {
+      padding: 120px 5vw;
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .quote-text {
+      font-family: var(--font-serif);
+      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      color: var(--text);
+      line-height: 2;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+    }
+    .quote-divider {
+      width: 40px;
+      height: 1px;
+      background: var(--gold);
+      margin: 32px auto;
+      opacity: 0.6;
+    }
+
+    /* Intro */
+    .intro-section {
+      padding: 0 5vw 120px;
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      gap: 48px;
+      align-items: center;
+    }
+    .intro-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .intro-text h3 {
+      font-family: var(--font-serif);
+      font-size: 1.3rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .intro-text p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .intro-link {
+      color: var(--gold);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .intro-link:hover { border-bottom-color: var(--gold); }
+
+    /* Portfolio filters */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 60px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      padding: 6px 0;
+      position: relative;
+      transition: color 0.3s;
+    }
+    .filter-btn.active, .filter-btn:hover { color: var(--gold); }
+    .filter-btn::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 1px;
+      background: var(--gold);
+      transition: width 0.3s;
+    }
+    .filter-btn.active::after, .filter-btn:hover::after { width: 100%; }
+
+    /* Portfolio masonry */
+    .portfolio-grid {
+      column-count: 3;
+      column-gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .portfolio-item {
+      break-inside: avoid;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+      background: var(--bg-elevated);
+    }
+    .portfolio-item img {
+      width: 100%;
+      display: block;
+      transition: transform 0.6s ease, opacity 0.3s;
+    }
+    .portfolio-item:hover img { transform: scale(1.04); }
+    .portfolio-item .item-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.2) 50%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 20px;
+    }
+    .portfolio-item:hover .item-overlay { opacity: 1; }
+    .item-title { font-family: var(--font-serif); font-size: 1rem; color: var(--text); margin-bottom: 4px; }
+    .item-cat { font-size: 0.75rem; color: var(--gold); letter-spacing: 0.05em; }
+
+    /* Work detail */
+    .detail-hero {
+      min-height: 85vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 5vw 60px;
+    }
+    .detail-img-wrap {
+      max-width: 1000px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .detail-img-wrap img {
+      width: 100%;
+      max-height: 75vh;
+      object-fit: contain;
+      display: block;
+    }
+    .detail-meta {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 5vw 80px;
+    }
+    .detail-meta h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      color: var(--gold);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .detail-cat {
+      display: inline-block;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 2px;
+      margin-bottom: 24px;
+    }
+    .detail-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+    .detail-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 20px;
+      padding: 24px 0;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 40px;
+    }
+    .info-item label {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .info-item span { font-size: 0.9rem; color: var(--text); }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.3s;
+      margin-bottom: 60px;
+    }
+    .back-btn:hover { color: var(--gold); }
+    .back-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+    .related-section {
+      padding: 0 5vw 100px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .related-title {
+      font-family: var(--font-serif);
+      color: var(--gold);
+      font-size: 1.1rem;
+      margin-bottom: 32px;
+      letter-spacing: 0.05em;
+    }
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 80px 0;
+      font-size: 0.95rem;
+    }
+
+    /* About */
+    .about-hero {
+      padding: 140px 5vw 80px;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .about-avatar {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .about-name {
+      font-family: var(--font-serif);
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      color: var(--gold);
+      margin-bottom: 8px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+    }
+    .about-role {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      margin-bottom: 48px;
+    }
+    .about-content {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 5vw 80px;
+      text-align: left;
+    }
+    .about-content p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 2;
+      margin-bottom: 24px;
+    }
+    .about-contact {
+      max-width: 700px;
+      margin: 0 auto 100px;
+      padding: 0 5vw;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .contact-item svg { width: 18px; height: 18px; stroke: var(--gold); stroke-width: 1.5; fill: none; flex-shrink: 0; }
+    .about-social {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 100px;
+    }
+    .about-social a {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: color 0.3s;
+      letter-spacing: 0.05em;
+    }
+    .about-social a:hover { color: var(--gold); }
+
+    /* Mobile nav */
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,10,0.98);
+      z-index: 99;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      color: var(--text);
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .mobile-menu a:hover { color: var(--gold); }
+    .mobile-close {
+      position: absolute;
+      top: 24px; right: 5vw;
+      background: none;
+      border: none;
+      color: var(--gold);
+      font-size: 2rem;
+    }
+
+    /* Image loading states */
+    img { opacity: 0; transition: opacity 0.5s; }
+    img.loaded { opacity: 1; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-toggle { display: block; }
+      .featured-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .portfolio-grid { column-count: 2; column-gap: 12px; }
+      .portfolio-item { margin-bottom: 12px; }
+      .intro-section { flex-direction: column; text-align: center; }
+      .intro-avatar { margin: 0 auto; }
+      .related-grid { grid-template-columns: 1fr 1fr; }
+      .detail-hero { padding-top: 100px; }
+    }
+    @media (max-width: 480px) {
+      .featured-grid { grid-template-columns: 1fr; }
+      .portfolio-grid { column-count: 1; }
+      .related-grid { grid-template-columns: 1fr; }
+      .filter-bar { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <nav class="nav" id="nav">
+    <a href="#/" class="nav-brand" data-clickable>陈默</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#/" data-clickable>首页</a></li>
+      <li><a href="#/portfolio" data-clickable>作品集</a></li>
+      <li><a href="#/about" data-clickable>关于我</a></li>
+      <li><a href="./admin/index.html" data-clickable>管理</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" data-clickable>☰</button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" data-clickable>✕</button>
+    <a href="#/" data-clickable>首页</a>
+    <a href="#/portfolio" data-clickable>作品集</a>
+    <a href="#/about" data-clickable>关于我</a>
+    <a href="./admin/index.html" data-clickable>管理</a>
+  </div>
+
+  <main id="app"></main>
+
+  <footer class="footer">
+    <div class="footer-brand">陈默摄影</div>
+    <div class="footer-links">
+      <a href="#/">首页</a>
+      <a href="#/portfolio">作品集</a>
+      <a href="#/about">关于我</a>
+      <a href="./admin/index.html">管理后台</a>
+    </div>
+    <div class="footer-copy">© 2024 陈默 · 保留所有权利</div>
+  </footer>
+
+  <script>
+    /* ==================== Default Data ==================== */
+    const defaultPhotographer = {
+      name: "陈默",
+      role: "独立摄影师",
+      bio: "陈默，独立摄影师，现居上海。专注于人像、风光与纪实摄影，致力于用镜头捕捉生活中稍纵即逝的光影与情感。从繁华都市的街头巷尾，到远离喧嚣的自然秘境，他的镜头始终对准那些容易被忽视却充满力量的瞬间。\n\n2015年开始全职摄影生涯，作品曾入选多个国内外摄影展，并与多家知名媒体及品牌建立长期合作。他相信，好的照片不是技术的炫耀，而是情感的传递。每一次快门，都是他与这个世界的一次真诚对话。",
+      email: "hello@chenmo.photo",
+      location: "中国 · 上海",
+      avatar: "./author-avatar.jpg",
+      heroImage: "./work-01.jpg",
+      heroTitle: "陈默",
+      heroSubtitle: "独立摄影师 / 用镜头叙述光影",
+      social: [
+        { name: "微博", url: "https://weibo.com" },
+        { name: "Instagram", url: "https://instagram.com" },
+        { name: "小红书", url: "https://xiaohongshu.com" }
+      ]
+    };
+
+    const defaultCategories = {
+      all: "全部",
+      portrait: "人像",
+      landscape: "风光",
+      documentary: "纪实",
+      commercial: "商业"
+    };
+
+    const workTitles = [
+      "暮色肖像","山川无言","老城记忆","品牌视觉",
+      "光与影","云海之上","街角故事","产品静物",
+      "情绪肖像","森林秘境","人间烟火","时尚大片",
+      "眼神","湖岸黄昏","匠人","建筑线条",
+      "黑白肖像","星空之下","市井生活","美食光影",
+      "微笑","冰川遗迹","旅途掠影","空间美学"
+    ];
+    const workCats = ["portrait","landscape","documentary","commercial","portrait","landscape","documentary","commercial","portrait","landscape","documentary","commercial","portrait","landscape","documentary","commercial","portrait","landscape","documentary","commercial","portrait","landscape","documentary","commercial"];
+    const workDescs = [
+      "黄昏时分的情绪人像，利用自然侧光勾勒面部轮廓，将温暖与孤独并置。",
+      "黎明时分的高山云海，天地一色的壮阔景观，等待三小时只为这一瞬。",
+      "老城区巷弄里的日常，记录即将消逝的城市记忆与市井温度。",
+      "为独立品牌拍摄的视觉形象，极简与质感的融合，光影中的产品叙事。",
+      "光线穿过窗棂，在墙面留下诗意的几何图案，时间在此刻凝固。",
+      "登顶之后的云海翻涌，仿佛置身仙境，大自然的馈赠从不让人失望。",
+      "街头巷尾的偶然一瞥，每个路人都是故事的主角，城市是最好的剧场。",
+      "精致产品静物，用光影讲述品牌故事，细节之处见真章。",
+      "捕捉人物最真实的情绪瞬间，眼神里藏着千言万语，无需多言。",
+      "深入原始森林，探索大自然最原始的静谧，苔藓与光线的低语。",
+      "夜市摊位前的烟火气，是城市最温暖的底色，深夜食堂的人间百态。",
+      "时尚杂志封面拍摄，高级感与态度并存，镜头前的自信张力。",
+      "一个眼神，足以传达所有未曾言说的情感，黑白之间的纯粹力量。",
+      "日落时分的湖岸，金色余晖洒满水面，波光粼粼中归于宁静。",
+      "专注的手艺人，时间在指尖静静流淌，传承的温度胜过千言万语。",
+      "现代建筑的几何美学，线条与空间的对话，混凝土也有诗意。",
+      "褪去色彩的干扰，回归人像最本质的表达，光影是唯一的语言。",
+      "远离城市光污染，仰望璀璨银河，宇宙的尺度让人重新思考存在。",
+      "菜市场的喧嚣与生动，生活本该如此热烈，平凡中的伟大。",
+      "美食摄影，让味蕾先于视觉被唤醒，餐桌上的艺术盛宴。",
+      "孩子纯真的笑容，是世界上最动人的风景，未经雕琢的美好。",
+      "极地冰川的震撼，感受大自然的鬼斧神工，蓝色梦境中的时间切片。",
+      "旅途中的偶然遇见，都是命运的精心安排，陌生的善意最温暖。",
+      "建筑空间摄影，呈现结构与光影的和谐，室内设计的视觉诗篇。"
+    ];
+
+    const defaultWorks = workTitles.map((title, i) => {
+      const idx = String(i + 1).padStart(2, '0');
+      return {
+        id: "w" + idx,
+        title,
+        category: workCats[i],
+        image: "./work-" + idx + ".jpg",
+        thumb: "./work-" + idx + ".jpg",
+        description: workDescs[i],
+        date: "2023-" + String((i % 12) + 1).padStart(2, '0') + "-15",
+        location: ["上海","杭州","北京","成都","大理","重庆"][i % 6],
+        camera: ["Sony A7R IV","Canon EOS R5","Nikon Z8","Fujifilm GFX 100S"][i % 4],
+        lens: ["85mm f/1.4","24-70mm f/2.8","35mm f/1.4","50mm f/1.2","70-200mm f/2.8"][i % 5]
+      };
+    });
+
+    function getDefaultData() {
+      return {
+        photographer: JSON.parse(JSON.stringify(defaultPhotographer)),
+        works: JSON.parse(JSON.stringify(defaultWorks)),
+        categories: JSON.parse(JSON.stringify(defaultCategories))
+      };
+    }
+
+    /* ==================== Data Layer ==================== */
+    let appData = null;
+
+    function loadData() {
+      const raw = localStorage.getItem('siteData');
+      if (raw) {
+        try {
+          appData = JSON.parse(raw);
+          if (!appData.photographer || !appData.works || !appData.categories) throw new Error('invalid');
+        } catch (e) {
+          appData = getDefaultData();
+          saveData();
+        }
+      } else {
+        appData = getDefaultData();
+        saveData();
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem('siteData', JSON.stringify(appData));
+    }
+
+    function getPhotographer() { return appData.photographer; }
+    function getWorks() { return appData.works || []; }
+    function getCategories() { return appData.categories || defaultCategories; }
+    function getWorkById(id) { return getWorks().find(w => w.id === id); }
+
+    /* ==================== Router ==================== */
+    function init() {
+      loadData();
+      setupRouter();
+      setupCursor();
+      setupNav();
+      setupStorageListener();
+      render();
+    }
+
+    function setupRouter() {
+      window.addEventListener('hashchange', render);
+    }
+
+    function setupStorageListener() {
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'siteData') {
+          loadData();
+          render();
+        }
+      });
+    }
+
+    function render() {
+      const hash = window.location.hash.replace('#', '') || '/';
+      const parts = hash.split('/').filter(Boolean);
+      const page = parts[0] || 'home';
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+
+      if (page === 'home') renderHome(app);
+      else if (page === 'portfolio') renderPortfolio(app);
+      else if (page === 'work' && parts[1]) renderWorkDetail(app, parts[1]);
+      else if (page === 'about') renderAbout(app);
+      else renderHome(app);
+
+      updateNavActive();
+      window.scrollTo(0, 0);
+      setupImages();
+      setupCursorHover();
+    }
+
+    function updateNavActive() {
+      const hash = window.location.hash.replace('#', '') || '/';
+      const parts = hash.split('/').filter(Boolean);
+      const page = parts[0] || 'home';
+      document.querySelectorAll('.nav-links a').forEach(a => {
+        const href = a.getAttribute('href').replace('#/', '').split('/')[0] || 'home';
+        a.classList.toggle('active', href === page);
+      });
+    }
+
+    /* ==================== Renderers ==================== */
+    function renderHome(container) {
+      const p = getPhotographer();
+      const works = getWorks().slice(0, 6);
+      const cats = getCategories();
+
+      const page = document.createElement('div');
+      page.className = 'page';
+      page.innerHTML = `
+        <section class="hero">
+          <div class="hero-bg img-fallback" style="background-image:url('${p.heroImage || p.avatar}')"></div>
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <h1 class="hero-title">${p.heroTitle || p.name}</h1>
+            <p class="hero-subtitle">${p.heroSubtitle || p.role}</p>
+          </div>
+          <div class="hero-scroll" data-clickable>
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">精选作品</h2>
+          <div class="featured-grid">
+            ${works.map(w => `
+              <a href="#/work/${w.id}" class="work-card" data-clickable>
+                <img src="${w.thumb || w.image}" alt="${w.title}" loading="lazy">
+                <div class="overlay">
+                  <div class="overlay-title">${w.title}</div>
+                  <div class="overlay-cat">${cats[w.category] || w.category}</div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </section>
+
+        <section class="quote-section">
+          <p class="quote-text">"摄影是光与影的诗歌，是时间的切片，也是灵魂与世界的对话。"</p>
+          <div class="quote-divider"></div>
+        </section>
+
+        <section class="intro-section">
+          <img src="${p.avatar}" alt="${p.name}" class="intro-avatar" loading="lazy">
+          <div class="intro-text">
+            <h3>${p.name} · ${p.role}</h3>
+            <p>${p.bio.split('\n')[0].substring(0, 90)}…</p>
+            <a href="#/about" class="intro-link" data-clickable>了解更多 →</a>
+          </div>
+        </section>
+      `;
+      container.appendChild(page);
+
+      page.querySelector('.hero-scroll').addEventListener('click', () => {
+        document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+
+    function renderPortfolio(container) {
+      const cats = getCategories();
+      const allWorks = getWorks();
+      const currentCat = new URLSearchParams(window.location.hash.split('?')[1]).get('cat') || 'all';
+      const filtered = allWorks.filter(w => currentCat === 'all' || w.category === currentCat);
+
+      const page = document.createElement('div');
+      page.className = 'page';
+      page.innerHTML = `
+        <section class="section" style="padding-top:120px;">
+          <h2 class="section-title">作品集</h2>
+          <div class="filter-bar">
+            ${Object.entries(cats).map(([key, label]) => `
+              <button class="filter-btn ${currentCat === key ? 'active' : ''}" data-cat="${key}" data-clickable>${label}</button>
+            `).join('')}
+          </div>
+          <div class="portfolio-grid" id="portfolioGrid">
+            ${filtered.length ? filtered.map(w => `
+              <a href="#/work/${w.id}" class="portfolio-item" data-clickable>
+                <img src="${w.thumb || w.image}" alt="${w.title}" loading="lazy">
+                <div class="item-overlay">
+                  <div class="item-title">${w.title}</div>
+                  <div class="item-cat">${cats[w.category] || w.category}</div>
+                </div>
+              </a>
+            `).join('') : '<div class="empty-state">该分类下暂无作品</div>'}
+          </div>
+        </section>
+      `;
+      container.appendChild(page);
+
+      page.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cat = btn.dataset.cat;
+          window.location.hash = cat === 'all' ? '#/portfolio' : '#/portfolio?cat=' + cat;
+        });
+      });
+    }
+
+    function renderWorkDetail(container, id) {
+      const work = getWorkById(id);
+      if (!work) {
+        window.location.hash = '#/portfolio';
+        return;
+      }
+      const cats = getCategories();
+      const related = getWorks().filter(w => w.id !== work.id && w.category === work.category).slice(0, 4);
+
+      const page = document.createElement('div');
+      page.className = 'page';
+      page.innerHTML = `
+        <section class="detail-hero">
+          <div class="detail-img-wrap">
+            <img src="${work.image}" alt="${work.title}">
+          </div>
+        </section>
+        <div class="detail-meta">
+          <a href="javascript:history.back()" class="back-btn" data-clickable>
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            返回
+          </a>
+          <h1>${work.title}</h1>
+          <span class="detail-cat">${cats[work.category] || work.category}</span>
+          <p class="detail-desc">${work.description}</p>
+          <div class="detail-info">
+            <div class="info-item"><label>拍摄日期</label><span>${work.date || '-'}</span></div>
+            <div class="info-item"><label>地点</label><span>${work.location || '-'}</span></div>
+            <div class="info-item"><label>相机</label><span>${work.camera || '-'}</span></div>
+            <div class="info-item"><label>镜头</label><span>${work.lens || '-'}</span></div>
+          </div>
+        </div>
+        ${related.length ? `
+          <div class="related-section">
+            <h3 class="related-title">相关作品</h3>
+            <div class="related-grid">
+              ${related.map(w => `
+                <a href="#/work/${w.id}" class="work-card" data-clickable>
+                  <img src="${w.thumb || w.image}" alt="${w.title}" loading="lazy">
+                  <div class="overlay">
+                    <div class="overlay-title">${w.title}</div>
+                    <div class="overlay-cat">${cats[w.category] || w.category}</div>
+                  </div>
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      `;
+      container.appendChild(page);
+    }
+
+    function renderAbout(container) {
+      const p = getPhotographer();
+
+      const page = document.createElement('div');
+      page.className = 'page';
+      page.innerHTML = `
+        <section class="about-hero">
+          <img src="${p.avatar}" alt="${p.name}" class="about-avatar" loading="lazy">
+          <h1 class="about-name">${p.name}</h1>
+          <p class="about-role">${p.role}</p>
+        </section>
+        <div class="about-content">
+          ${p.bio.split('\n').map(par => `<p>${par}</p>`).join('')}
+          <p>如果你对我的作品感兴趣，或者有合作的想法，欢迎通过以下方式联系我。</p>
+        </div>
+        <div class="about-contact">
+          <div class="contact-item">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 8L2 4"/></svg>
+            <span>${p.email}</span>
+          </div>
+          <div class="contact-item">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>${p.location}</span>
+          </div>
+        </div>
+        ${(p.social && p.social.length) ? `
+          <div class="about-social">
+            ${p.social.map(s => `<a href="${s.url}" target="_blank" rel="noopener" data-clickable>${s.name}</a>`).join('')}
+          </div>
+        ` : ''}
+      `;
+      container.appendChild(page);
+    }
+
+    /* ==================== Utilities ==================== */
+    function setupImages() {
+      document.querySelectorAll('img').forEach(img => {
+        if (img.complete) {
+          if (img.naturalWidth > 0) img.classList.add('loaded');
+          else handleImgError(img);
+        } else {
+          img.addEventListener('load', () => img.classList.add('loaded'));
+          img.addEventListener('error', () => handleImgError(img));
+        }
+      });
+    }
+
+    function handleImgError(img) {
+      img.style.opacity = '0';
+      const parent = img.parentElement;
+      if (parent) {
+        parent.classList.add('img-fallback');
+        parent.style.position = 'relative';
+        parent.style.overflow = 'hidden';
+        if (!parent.style.minHeight) parent.style.minHeight = '200px';
+      }
+    }
+
+    function setupCursor() {
+      if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      const dot = document.getElementById('cursorDot');
+      const ring = document.getElementById('cursorRing');
+      let mx = 0, my = 0, rx = 0, ry = 0;
+
+      document.addEventListener('mousemove', (e) => {
+        mx = e.clientX; my = e.clientY;
+        dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+      });
+
+      (function animate() {
+        rx += (mx - rx) * 0.15;
+        ry += (my - ry) * 0.15;
+        ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+        requestAnimationFrame(animate);
+      })();
+    }
+
+    function setupCursorHover() {
+      if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      document.querySelectorAll('a, button, [data-clickable], .work-card, .portfolio-item, .filter-btn').forEach(el => {
+        el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+        el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+      });
+    }
+
+    function setupNav() {
+      const nav = document.getElementById('nav');
+      window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50));
+
+      const toggle = document.getElementById('navToggle');
+      const menu = document.getElementById('mobileMenu');
+      const close = document.getElementById('mobileClose');
+
+      toggle.addEventListener('click', () => menu.classList.add('open'));
+      close.addEventListener('click', () => menu.classList.remove('open'));
+      menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

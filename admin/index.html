@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>摄影作品集 · 管理后台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-card: #121212;
+    --bg-hover: #1A1A1A;
+    --bg-input: #141414;
+    --border: #1E1E1E;
+    --border-light: #2A2A2A;
+    --text: #E5E5E5;
+    --text-secondary: #8A8A8A;
+    --text-muted: #555555;
+    --gold: #D4A853;
+    --gold-hover: #C49A4A;
+    --gold-dim: #D4A85330;
+    --red: #C85353;
+    --red-bg: #C8535315;
+    --green: #53D4A0;
+    --green-bg: #53D4A015;
+    --radius: 6px;
+    --radius-lg: 10px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #444; }
+  a { color: var(--gold); text-decoration: none; transition: color var(--transition); }
+  a:hover { color: var(--gold-hover); }
+
+  /* Layout */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 220px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+  .sidebar-brand {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-brand h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .sidebar-brand p { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; margin-bottom: 4px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 14px; font-weight: 400;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+  .nav-item.active { background: var(--gold-dim); color: var(--gold); }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-footer a {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-muted);
+  }
+  .sidebar-footer a:hover { color: var(--gold); }
+
+  .main {
+    flex: 1;
+    margin-left: 220px;
+    display: flex;
+    flex-direction: column;
+  }
+  .topbar {
+    height: 56px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 16px; border: none; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all var(--transition); font-family: inherit;
+  }
+  .btn-primary { background: var(--gold); color: #000; }
+  .btn-primary:hover { background: var(--gold-hover); }
+  .btn-secondary { background: var(--bg-hover); color: var(--text); border: 1px solid var(--border-light); }
+  .btn-secondary:hover { background: var(--border-light); }
+  .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .content { padding: 28px; flex: 1; overflow-y: auto; }
+
+  /* Page sections */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Stats cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    transition: border-color var(--transition);
+  }
+  .stat-card:hover { border-color: var(--border-light); }
+  .stat-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: var(--gold); font-family: 'Inter', sans-serif; }
+  .stat-card .note { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-header h2 { font-size: 15px; font-weight: 500; color: var(--text); }
+  .card-body { padding: 22px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left; padding: 12px 14px;
+    font-weight: 500; font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 12px 14px; border-bottom: 1px solid var(--border);
+    color: var(--text-secondary); vertical-align: middle;
+  }
+  tbody tr:hover td { background: var(--bg-hover); color: var(--text); }
+  tbody tr:last-child td { border-bottom: none; }
+  .table-thumb {
+    width: 48px; height: 48px; border-radius: var(--radius);
+    object-fit: cover; background: var(--bg-input);
+    display: block;
+  }
+  .table-thumb.error {
+    background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--text-muted);
+  }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-gold { background: var(--gold-dim); color: var(--gold); }
+  .badge-portrait { background: #D4A85320; color: #D4A853; }
+  .badge-landscape { background: #53A0D420; color: #53A0D4; }
+  .badge-documentary { background: #53D4A020; color: #53D4A0; }
+  .badge-commercial { background: #D453B820; color: #D453B8; }
+  .table-actions { display: flex; gap: 6px; }
+
+  /* Forms */
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block; font-size: 12px; font-weight: 500;
+    color: var(--text-secondary); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="date"],
+  .form-group textarea,
+  .form-group select {
+    width: 100%; padding: 10px 12px;
+    background: var(--bg-input); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 14px; font-family: inherit;
+    transition: border-color var(--transition);
+  }
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    outline: none; border-color: var(--gold);
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .form-group ::placeholder { color: var(--text-muted); }
+  .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 640px) {
+    .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  }
+
+  /* Upload area */
+  .upload-area {
+    border: 2px dashed var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    background: var(--bg-input);
+  }
+  .upload-area:hover { border-color: var(--gold); background: var(--gold-dim); }
+  .upload-area.dragover { border-color: var(--gold); background: var(--gold-dim); }
+  .upload-area svg { width: 32px; height: 32px; color: var(--text-muted); margin-bottom: 8px; }
+  .upload-area p { font-size: 13px; color: var(--text-secondary); }
+  .upload-area .hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .upload-preview {
+    margin-top: 12px;
+    max-width: 200px;
+    border-radius: var(--radius);
+    display: block;
+    object-fit: cover;
+    background: var(--bg);
+  }
+  .upload-preview.error {
+    width: 200px; height: 120px;
+    background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .upload-file-name { font-size: 12px; color: var(--gold); margin-top: 8px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    width: 100%; max-width: 680px;
+    max-height: 90vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+  }
+  .modal-header h3 { font-size: 15px; font-weight: 500; }
+  .modal-close { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+  .modal-close:hover { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+  .modal-body { padding: 22px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    display: flex; justify-content: flex-end; gap: 10px;
+    padding: 14px 22px; border-top: 1px solid var(--border);
+  }
+
+  /* Toast */
+  .toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 300;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    min-width: 260px; max-width: 340px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .toast.toast-out { animation: toastOut 0.3s ease forwards; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+  .toast-success { border-left: 3px solid var(--green); }
+  .toast-error { border-left: 3px solid var(--red); }
+  .toast-info { border-left: 3px solid var(--gold); }
+
+  /* Progress bar */
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+  .progress-bar-fill { height: 100%; background: var(--gold); transition: width 0.2s ease; border-radius: 2px; }
+
+  /* Category distribution bars */
+  .dist-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .dist-bar-label { width: 60px; font-size: 12px; color: var(--text-secondary); flex-shrink: 0; }
+  .dist-bar-track { flex: 1; height: 8px; background: var(--bg-input); border-radius: 4px; overflow: hidden; }
+  .dist-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+  .dist-bar-value { width: 30px; font-size: 12px; color: var(--text-muted); text-align: right; flex-shrink: 0; }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+  .empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; color: var(--border-light); }
+  .empty-state p { font-size: 14px; }
+
+  /* Confirm dialog */
+  .confirm-dialog { text-align: center; padding: 20px 10px; }
+  .confirm-dialog p { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+  .confirm-dialog .modal-footer { justify-content: center; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { width: 0; transform: translateX(-100%); }
+    .sidebar.open { width: 220px; transform: translateX(0); }
+    .main { margin-left: 0; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .mobile-menu-btn { display: none; }
+  @media (max-width: 768px) { .mobile-menu-btn { display: flex; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>光影</h1>
+      <p>管理后台</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>仪表盘</span>
+      </div>
+      <div class="nav-item" data-page="works" onclick="switchPage('works')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>作品管理</span>
+      </div>
+      <div class="nav-item" data-page="profile" onclick="switchPage('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>个人资料</span>
+      </div>
+      <div class="nav-item" data-page="data" onclick="switchPage('data')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>数据管理</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../index.html" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span>返回前台</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-secondary btn-sm mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" id="pageTitle">仪表盘</span>
+      </div>
+      <div class="topbar-actions">
+        <span style="font-size:12px;color:var(--text-muted);" id="lastSaved"></span>
+        <button class="btn btn-primary btn-sm" onclick="saveData()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          保存数据
+        </button>
+      </div>
+    </div>
+
+    <div class="content" id="content">
+      <!-- Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="label">作品总数</div>
+            <div class="value" id="statTotal">0</div>
+            <div class="note" id="statTotalNote">张精选作品</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">人像作品</div>
+            <div class="value" id="statPortrait">0</div>
+            <div class="note">张</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">风光作品</div>
+            <div class="value" id="statLandscape">0</div>
+            <div class="note">张</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">纪实作品</div>
+            <div class="value" id="statDocumentary">0</div>
+            <div class="note">张</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">商业作品</div>
+            <div class="value" id="statCommercial">0</div>
+            <div class="note">张</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h2>分类分布</h2></div>
+          <div class="card-body" id="distributionBody">
+            <!-- Bars rendered here -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h2>最新作品</h2></div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>缩略图</th><th>标题</th><th>分类</th><th>拍摄日期</th></tr></thead>
+                <tbody id="recentWorksTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Works -->
+      <div class="page" id="page-works">
+        <div class="card">
+          <div class="card-header">
+            <h2>作品列表</h2>
+            <button class="btn btn-primary btn-sm" onclick="openWorkModal()">+ 添加作品</button>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:60px">缩略图</th>
+                    <th>标题</th>
+                    <th>分类</th>
+                    <th>拍摄日期</th>
+                    <th>地点</th>
+                    <th>相机</th>
+                    <th>镜头</th>
+                    <th style="width:100px">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="worksTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <div class="page" id="page-profile">
+        <div class="card">
+          <div class="card-header"><h2>个人资料</h2></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="pName" placeholder="摄影师姓名">
+              </div>
+              <div class="form-group">
+                <label>身份 / 角色</label>
+                <input type="text" id="pRole" placeholder="例如：独立摄影师">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>简介</label>
+              <textarea id="pBio" placeholder="摄影师简介..."></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>邮箱</label>
+                <input type="text" id="pEmail" placeholder="hello@example.com">
+              </div>
+              <div class="form-group">
+                <label>所在城市</label>
+                <input type="text" id="pLocation" placeholder="中国 · 上海">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>头像</label>
+                <div class="upload-area" id="avatarUpload" onclick="document.getElementById('avatarInput').click()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <p>点击或拖拽上传头像</p>
+                  <p class="hint">建议尺寸 400×400px</p>
+                  <img id="avatarPreview" class="upload-preview" style="display:none;" alt="">
+                  <p class="upload-file-name" id="avatarFileName"></p>
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+              </div>
+              <div class="form-group">
+                <label>Hero 背景图</label>
+                <div class="upload-area" id="heroUpload" onclick="document.getElementById('heroInput').click()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <p>点击或拖拽上传 Hero 背景图</p>
+                  <p class="hint">建议宽度 1920px 以上</p>
+                  <img id="heroPreview" class="upload-preview" style="display:none;" alt="">
+                  <p class="upload-file-name" id="heroFileName"></p>
+                </div>
+                <input type="file" id="heroInput" accept="image/*" style="display:none" onchange="handleHeroUpload(event)">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Hero 标题</label>
+                <input type="text" id="pHeroTitle" placeholder="陈默">
+              </div>
+              <div class="form-group">
+                <label>Hero 副标题</label>
+                <input type="text" id="pHeroSubtitle" placeholder="独立摄影师 / 用镜头叙述光影">
+              </div>
+            </div>
+            <div style="margin-top:8px;">
+              <button class="btn btn-primary" onclick="saveProfile()">保存个人资料</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data -->
+      <div class="page" id="page-data">
+        <div class="card">
+          <div class="card-header"><h2>导出数据</h2></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">将所有数据导出为 JSON 文件，用于备份或迁移。</p>
+            <button class="btn btn-primary" onclick="exportData()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              导出 JSON
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>导入数据</h2></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">从 JSON 文件恢复数据。导入会覆盖当前所有数据。</p>
+            <div class="upload-area" id="importUpload" onclick="document.getElementById('importInput').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p>点击选择 JSON 文件</p>
+              <p class="hint">仅支持 .json 格式</p>
+              <p class="upload-file-name" id="importFileName"></p>
+            </div>
+            <input type="file" id="importInput" accept="application/json" style="display:none" onchange="handleImport(event)">
+            <div style="margin-top:16px;">
+              <button class="btn btn-primary" onclick="confirmImport()">确认导入</button>
+              <button class="btn btn-secondary" onclick="clearImport()">清空</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>重置数据</h2></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">将所有数据恢复到初始默认状态。此操作不可撤销。</p>
+            <button class="btn btn-danger" onclick="openResetConfirm()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              重置为默认数据
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Work Modal -->
+<div class="modal-overlay" id="workModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="workModalTitle">添加作品</h3>
+      <button class="modal-close" onclick="closeWorkModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="wId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>标题</label>
+          <input type="text" id="wTitle" placeholder="作品标题">
+        </div>
+        <div class="form-group">
+          <label>分类</label>
+          <select id="wCategory">
+            <option value="portrait">人像</option>
+            <option value="landscape">风光</option>
+            <option value="documentary">纪实</option>
+            <option value="commercial">商业</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>描述</label>
+        <textarea id="wDescription" placeholder="作品描述..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>图片</label>
+        <div class="upload-area" id="workUpload" onclick="document.getElementById('workInput').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p>点击或拖拽上传图片</p>
+          <p class="hint">支持 JPG、PNG、WebP</p>
+          <img id="workPreview" class="upload-preview" style="display:none;" alt="">
+          <p class="upload-file-name" id="workFileName"></p>
+        </div>
+        <input type="file" id="workInput" accept="image/*" style="display:none" onchange="handleWorkUpload(event)">
+        <input type="hidden" id="wImageBase64">
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>拍摄日期</label>
+          <input type="date" id="wDate">
+        </div>
+        <div class="form-group">
+          <label>拍摄地点</label>
+          <input type="text" id="wLocation" placeholder="上海">
+        </div>
+        <div class="form-group">
+          <label>相机</label>
+          <input type="text" id="wCamera" placeholder="Sony A7R IV">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>镜头</label>
+        <input type="text" id="wLens" placeholder="FE 85mm f/1.4 GM">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeWorkModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveWork()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Confirm Modal -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header"><h3>确认重置</h3><button class="modal-close" onclick="closeResetModal()">✕</button></div>
+    <div class="modal-body confirm-dialog">
+      <p>确定要重置所有数据到初始默认状态吗？<br>此操作不可撤销。</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeResetModal()">取消</button>
+      <button class="btn btn-danger" onclick="doReset()">确认重置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ==================== Default Data ====================
+const CATEGORIES = {
+  all: "全部", portrait: "人像", landscape: "风光", documentary: "纪实", commercial: "商业"
+};
+
+const CATEGORY_COLORS = {
+  portrait: '#D4A853', landscape: '#53A0D4', documentary: '#53D4A0', commercial: '#D453B8'
+};
+
+const BADGE_CLASSES = {
+  portrait: 'badge-portrait', landscape: 'badge-landscape', documentary: 'badge-documentary', commercial: 'badge-commercial'
+};
+
+const defaultProfile = {
+  name: "陈默",
+  role: "独立摄影师",
+  bio: "用镜头叙述光影之间的故事。十年拍摄经验，专注于人像、风光与纪实摄影。作品曾刊登于《中国国家地理》《VISION青年视觉》等媒体。",
+  email: "hello@chenmo.photo",
+  location: "中国 · 上海",
+  avatar: "./author-avatar.jpg",
+  heroImage: "./work-01.jpg",
+  heroTitle: "陈默",
+  heroSubtitle: "独立摄影师 / 用镜头叙述光影"
+};
+
+const defaultWorks = [
+  { id: "w01", title: "暮色肖像", category: "portrait", image: "./work-01.jpg", thumb: "./work-01.jpg", description: "黄昏时分的情绪人像，捕捉光线在面部流转的瞬间。", date: "2023-10-15", location: "上海", camera: "Sony A7R IV", lens: "FE 85mm f/1.4 GM" },
+  { id: "w02", title: "外滩晨雾", category: "landscape", image: "./work-02.jpg", thumb: "./work-02.jpg", description: "清晨五点的黄浦江畔，薄雾笼罩下的城市天际线。", date: "2023-09-20", location: "上海", camera: "Sony A7R IV", lens: "FE 16-35mm f/2.8 GM" },
+  { id: "w03", title: "老茶馆", category: "documentary", image: "./work-03.jpg", thumb: "./work-03.jpg", description: "记录即将消失的老茶馆文化，一位老人独自品茗的午后。", date: "2023-08-12", location: "成都", camera: "Leica M10", lens: "Summilux 35mm f/1.4" },
+  { id: "w04", title: "商业人像", category: "commercial", image: "./work-04.jpg", thumb: "./work-04.jpg", description: "为高端时尚品牌拍摄的商业人像系列，强调光影质感。", date: "2023-11-05", location: "上海", camera: "Hasselblad X2D", lens: "XCD 90mm f/2.5" },
+  { id: "w05", title: "城市霓虹", category: "landscape", image: "./work-05.jpg", thumb: "./work-05.jpg", description: "雨夜中的城市霓虹，长曝光记录光轨与倒影的交织。", date: "2023-07-22", location: "香港", camera: "Sony A7R IV", lens: "FE 24-70mm f/2.8 GM" },
+  { id: "w06", title: "舞者", category: "portrait", image: "./work-06.jpg", thumb: "./work-06.jpg", description: "芭蕾舞者在废弃工厂中的即兴创作，力量与柔美的对比。", date: "2023-06-18", location: "北京", camera: "Sony A1", lens: "FE 135mm f/1.8 GM" },
+  { id: "w07", title: "乡村集市", category: "documentary", image: "./work-07.jpg", thumb: "./work-07.jpg", description: "云南山区乡村集市，记录传统生活方式与人们的笑容。", date: "2023-05-09", location: "云南", camera: "Fujifilm X-T5", lens: "XF 23mm f/1.4 R" },
+  { id: "w08", title: "产品静物", category: "commercial", image: "./work-08.jpg", thumb: "./work-08.jpg", description: "为高端腕表品牌拍摄的静物广告，极致的微距细节。", date: "2023-12-01", location: "上海", camera: "Sony A7R IV", lens: "FE 90mm f/2.8 Macro G" },
+  { id: "w09", title: "古镇黄昏", category: "landscape", image: "./work-09.jpg", thumb: "./work-09.jpg", description: "江南水乡古镇的黄昏，灯笼初上与天色交融的温柔时刻。", date: "2023-04-14", location: "苏州", camera: "Sony A7R IV", lens: "FE 16-35mm f/2.8 GM" },
+  { id: "w10", title: "情绪人像", category: "portrait", image: "./work-10.jpg", thumb: "./work-10.jpg", description: "黑白情绪人像，探索内心世界与外在光影的映射关系。", date: "2023-03-28", location: "上海", camera: "Leica M10", lens: "Summilux 50mm f/1.4" },
+  { id: "w11", title: "街头艺人", category: "documentary", image: "./work-11.jpg", thumb: "./work-11.jpg", description: "地铁出口的街头歌手，用音乐温暖每一个匆忙的过客。", date: "2023-02-17", location: "上海", camera: "Fujifilm X100V", lens: "23mm f/2" },
+  { id: "w12", title: "品牌画册", category: "commercial", image: "./work-12.jpg", thumb: "./work-12.jpg", description: "为独立设计师品牌拍摄的季节画册，融合自然与时尚。", date: "2023-01-10", location: "杭州", camera: "Hasselblad X2D", lens: "XCD 65mm f/2.8" },
+  { id: "w13", title: "雪山日出", category: "landscape", image: "./work-13.jpg", thumb: "./work-13.jpg", description: "梅里雪山的日照金顶，第一缕阳光照亮神女峰的瞬间。", date: "2022-12-25", location: "云南", camera: "Sony A7R IV", lens: "FE 70-200mm f/2.8 GM II" },
+  { id: "w14", title: "眼神", category: "portrait", image: "./work-14.jpg", thumb: "./work-14.jpg", description: "专注特写人像，捕捉眼神中无法言说的故事与力量。", date: "2022-11-08", location: "上海", camera: "Sony A1", lens: "FE 85mm f/1.4 GM" },
+  { id: "w15", title: "渔民", category: "documentary", image: "./work-15.jpg", thumb: "./work-15.jpg", description: "福建沿海的渔民清晨出海，记录传统渔业的生活方式。", date: "2022-10-03", location: "福建", camera: "Fujifilm X-T5", lens: "XF 16-55mm f/2.8 R LM WR" },
+  { id: "w16", title: "美妆广告", category: "commercial", image: "./work-16.jpg", thumb: "./work-16.jpg", description: "国际美妆品牌的中国区广告大片，展现东方女性的自信。", date: "2022-09-15", location: "上海", camera: "Hasselblad X2D", lens: "XCD 90mm f/2.5" },
+  { id: "w17", title: "星空银河", category: "landscape", image: "./work-17.jpg", thumb: "./work-17.jpg", description: "青藏高原的银河拱桥，长曝光记录宇宙的浩瀚与渺小。", date: "2022-08-20", location: "青海", camera: "Sony A7R IV", lens: "FE 14mm f/1.8 GM" },
+  { id: "w18", title: "双重曝光", category: "portrait", image: "./work-18.jpg", thumb: "./work-18.jpg", description: "创意双重曝光人像，将人物轮廓与自然风景融合叠加。", date: "2022-07-11", location: "杭州", camera: "Sony A7R IV", lens: "FE 50mm f/1.2 GM" },
+  { id: "w19", title: "老街故事", category: "documentary", image: "./work-19.jpg", thumb: "./work-19.jpg", description: "哈尔滨老街的冬日日常，记录冰城人的坚韧与温情。", date: "2022-06-05", location: "哈尔滨", camera: "Leica M10", lens: "Summilux 35mm f/1.4" },
+  { id: "w20", title: "建筑空间", category: "commercial", image: "./work-20.jpg", thumb: "./work-20.jpg", description: "为建筑事务所拍摄的空间摄影，呈现光影与空间的对话。", date: "2022-05-22", location: "北京", camera: "Sony A7R IV", lens: "FE 16-35mm f/2.8 GM" },
+  { id: "w21", title: "极光之夜", category: "landscape", image: "./work-21.jpg", thumb: "./work-21.jpg", description: "冰岛极光爆发的夜晚，绿色光带在星空中舞动。", date: "2022-04-18", location: "冰岛", camera: "Sony A7R IV", lens: "FE 14mm f/1.8 GM" },
+  { id: "w22", title: "剪影", category: "portrait", image: "./work-22.jpg", thumb: "./work-22.jpg", description: "逆光剪影人像，用最纯粹的轮廓讲述人物的身形与姿态。", date: "2022-03-09", location: "上海", camera: "Sony A1", lens: "FE 70-200mm f/2.8 GM II" },
+  { id: "w23", title: "工匠", category: "documentary", image: "./work-23.jpg", thumb: "./work-23.jpg", description: "景德镇老匠人专注制陶的双手，记录传承千年的技艺。", date: "2022-02-14", location: "景德镇", camera: "Fujifilm X100V", lens: "23mm f/2" },
+  { id: "w24", title: "汽车广告", category: "commercial", image: "./work-24.jpg", thumb: "./work-24.jpg", description: "豪华汽车品牌宣传片拍摄，动态捕捉车辆的线条与速度感。", date: "2022-01-30", location: "上海", camera: "Sony A1", lens: "FE 24-70mm f/2.8 GM" }
+];
+
+function getDefaultData() {
+  return {
+    profile: JSON.parse(JSON.stringify(defaultProfile)),
+    works: JSON.parse(JSON.stringify(defaultWorks)),
+    categories: { ...CATEGORIES }
+  };
+}
+
+// ==================== Data Management ====================
+let siteData = null;
+let importedJson = null;
+let editingWorkId = null;
+let tempAvatar = null;
+let tempHero = null;
+let tempWorkImage = null;
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('siteData');
+    if (raw) {
+      siteData = JSON.parse(raw);
+      toast('已从 localStorage 加载数据', 'info');
+    } else {
+      siteData = getDefaultData();
+      saveToStorage(false);
+      toast('已加载默认数据', 'info');
+    }
+  } catch (e) {
+    console.error('loadData error', e);
+    siteData = getDefaultData();
+    saveToStorage(false);
+    toast('数据加载失败，已恢复默认', 'error');
+  }
+}
+
+function saveToStorage(notify = true) {
+  try {
+    localStorage.setItem('siteData', JSON.stringify(siteData));
+    document.getElementById('lastSaved').textContent = '已保存 ' + new Date().toLocaleTimeString();
+    if (notify) {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'siteData' }));
+    }
+  } catch (e) {
+    toast('保存失败: ' + e.message, 'error');
+    throw e;
+  }
+}
+
+function saveData() {
+  try {
+    saveToStorage(true);
+    toast('数据已保存到 localStorage', 'success');
+  } catch (e) {
+    toast('保存失败', 'error');
+  }
+}
+
+function saveDataSilent() {
+  try { saveToStorage(true); } catch (e) {}
+}
+
+// ==================== Toast ====================
+function toast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('toast-out');
+    setTimeout(() => el.remove(), 350);
+  }, 3000);
+}
+
+// ==================== Navigation ====================
+const pageTitles = {
+  dashboard: '仪表盘',
+  works: '作品管理',
+  profile: '个人资料',
+  data: '数据管理'
+};
+
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector('.nav-item[data-page="' + page + '"]').classList.add('active');
+  document.getElementById('pageTitle').textContent = pageTitles[page] || '';
+  document.getElementById('sidebar').classList.remove('open');
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'works') renderWorks();
+  if (page === 'profile') renderProfile();
+  window.scrollTo(0, 0);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ==================== Dashboard ====================
+function renderDashboard() {
+  const works = siteData.works || [];
+  const counts = { portrait: 0, landscape: 0, documentary: 0, commercial: 0 };
+  works.forEach(w => { if (counts[w.category] !== undefined) counts[w.category]++; });
+
+  document.getElementById('statTotal').textContent = works.length;
+  document.getElementById('statPortrait').textContent = counts.portrait;
+  document.getElementById('statLandscape').textContent = counts.landscape;
+  document.getElementById('statDocumentary').textContent = counts.documentary;
+  document.getElementById('statCommercial').textContent = counts.commercial;
+  document.getElementById('statTotalNote').textContent = '张精选作品' + (works.length >= 24 ? '（已满）' : '');
+
+  // Distribution bars
+  const total = works.length || 1;
+  const dist = [
+    { label: '人像', key: 'portrait', count: counts.portrait },
+    { label: '风光', key: 'landscape', count: counts.landscape },
+    { label: '纪实', key: 'documentary', count: counts.documentary },
+    { label: '商业', key: 'commercial', count: counts.commercial }
+  ];
+  const distHtml = dist.map(d => {
+    const pct = Math.round((d.count / total) * 100);
+    const color = CATEGORY_COLORS[d.key];
+    return `<div class="dist-bar">
+      <div class="dist-bar-label">${d.label}</div>
+      <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+      <div class="dist-bar-value">${d.count}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('distributionBody').innerHTML = distHtml;
+
+  // Recent works (last 6 by date desc)
+  const recent = [...works].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6);
+  const tbody = document.getElementById('recentWorksTable');
+  tbody.innerHTML = recent.map(w => `
+    <tr>
+      <td><img class="table-thumb" src="${w.thumb || w.image}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'table-thumb error\\'>无图</div>'"></td>
+      <td>${w.title}</td>
+      <td><span class="badge ${BADGE_CLASSES[w.category] || 'badge-gold'}">${CATEGORIES[w.category] || w.category}</span></td>
+      <td>${w.date || '-'}</td>
+    </tr>
+  `).join('');
+  if (!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><p>暂无作品</p></td></tr>';
+  }
+}
+
+// ==================== Works ====================
+function renderWorks() {
+  const tbody = document.getElementById('worksTable');
+  const works = siteData.works || [];
+  if (!works.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>暂无作品，点击右上角添加</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = works.map(w => {
+    const img = w.thumb || w.image || '';
+    const isBase64 = img.startsWith('data:');
+    const src = img;
+    return `<tr>
+      <td><img class="table-thumb" src="${src}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'table-thumb error\\'>无图</div>'"></td>
+      <td>${w.title || '-'}</td>
+      <td><span class="badge ${BADGE_CLASSES[w.category] || 'badge-gold'}">${CATEGORIES[w.category] || w.category}</span></td>
+      <td>${w.date || '-'}</td>
+      <td>${w.location || '-'}</td>
+      <td>${w.camera || '-'}</td>
+      <td>${w.lens || '-'}</td>
+      <td class="table-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openWorkModal() {
+  editingWorkId = null;
+  document.getElementById('workModalTitle').textContent = '添加作品';
+  document.getElementById('wId').value = '';
+  document.getElementById('wTitle').value = '';
+  document.getElementById('wCategory').value = 'portrait';
+  document.getElementById('wDescription').value = '';
+  document.getElementById('wDate').value = '';
+  document.getElementById('wLocation').value = '';
+  document.getElementById('wCamera').value = '';
+  document.getElementById('wLens').value = '';
+  document.getElementById('wImageBase64').value = '';
+  document.getElementById('workPreview').style.display = 'none';
+  document.getElementById('workPreview').src = '';
+  document.getElementById('workFileName').textContent = '';
+  tempWorkImage = null;
+  document.getElementById('workModal').classList.add('open');
+}
+
+function closeWorkModal() {
+  document.getElementById('workModal').classList.remove('open');
+}
+
+function editWork(id) {
+  const w = (siteData.works || []).find(x => x.id === id);
+  if (!w) return toast('作品未找到', 'error');
+  editingWorkId = id;
+  document.getElementById('workModalTitle').textContent = '编辑作品';
+  document.getElementById('wId').value = w.id;
+  document.getElementById('wTitle').value = w.title || '';
+  document.getElementById('wCategory').value = w.category || 'portrait';
+  document.getElementById('wDescription').value = w.description || '';
+  document.getElementById('wDate').value = w.date || '';
+  document.getElementById('wLocation').value = w.location || '';
+  document.getElementById('wCamera').value = w.camera || '';
+  document.getElementById('wLens').value = w.lens || '';
+  tempWorkImage = null;
+  const img = w.image || w.thumb || '';
+  if (img.startsWith('data:')) {
+    document.getElementById('workPreview').src = img;
+    document.getElementById('workPreview').style.display = 'block';
+    document.getElementById('wImageBase64').value = img;
+    document.getElementById('workFileName').textContent = '当前为 base64 存储';
+  } else if (img) {
+    document.getElementById('workPreview').src = img;
+    document.getElementById('workPreview').style.display = 'block';
+    document.getElementById('wImageBase64').value = '';
+    document.getElementById('workFileName').textContent = img.replace(/^\.\//, '');
+  } else {
+    document.getElementById('workPreview').style.display = 'none';
+    document.getElementById('workFileName').textContent = '';
+  }
+  document.getElementById('workModal').classList.add('open');
+}
+
+function saveWork() {
+  const title = document.getElementById('wTitle').value.trim();
+  if (!title) return toast('请输入作品标题', 'error');
+  const category = document.getElementById('wCategory').value;
+  const description = document.getElementById('wDescription').value.trim();
+  const date = document.getElementById('wDate').value;
+  const location = document.getElementById('wLocation').value.trim();
+  const camera = document.getElementById('wCamera').value.trim();
+  const lens = document.getElementById('wLens').value.trim();
+
+  let image, thumb;
+  if (tempWorkImage) {
+    image = tempWorkImage;
+    thumb = tempWorkImage;
+  } else if (document.getElementById('wImageBase64').value) {
+    image = document.getElementById('wImageBase64').value;
+    thumb = image;
+  } else if (editingWorkId) {
+    const existing = (siteData.works || []).find(w => w.id === editingWorkId);
+    image = existing ? (existing.image || '') : '';
+    thumb = existing ? (existing.thumb || image) : image;
+  } else {
+    image = '';
+    thumb = '';
+  }
+
+  if (!editingWorkId) {
+    const newId = 'w' + Date.now().toString(36);
+    siteData.works.push({
+      id: newId, title, category, image, thumb, description,
+      date, location, camera, lens
+    });
+    toast('作品已添加', 'success');
+  } else {
+    const idx = siteData.works.findIndex(w => w.id === editingWorkId);
+    if (idx >= 0) {
+      siteData.works[idx] = {
+        ...siteData.works[idx], title, category, image, thumb, description,
+        date, location, camera, lens
+      };
+      toast('作品已更新', 'success');
+    }
+  }
+  saveDataSilent();
+  closeWorkModal();
+  renderWorks();
+}
+
+function deleteWork(id) {
+  if (!confirm('确定要删除这张作品吗？')) return;
+  siteData.works = (siteData.works || []).filter(w => w.id !== id);
+  saveDataSilent();
+  renderWorks();
+  toast('作品已删除', 'success');
+}
+
+// ==================== File Uploads ====================
+function readFileAsBase64(file, callback) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    toast('请选择图片文件', 'error'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => callback(e.target.result, file.name);
+  reader.onerror = () => toast('文件读取失败', 'error');
+  reader.readAsDataURL(file);
+}
+
+function handleAvatarUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  readFileAsBase64(file, (base64, name) => {
+    tempAvatar = base64;
+    document.getElementById('avatarPreview').src = base64;
+    document.getElementById('avatarPreview').style.display = 'block';
+    document.getElementById('avatarFileName').textContent = name;
+    toast('头像已加载', 'success');
+  });
+}
+
+function handleHeroUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  readFileAsBase64(file, (base64, name) => {
+    tempHero = base64;
+    document.getElementById('heroPreview').src = base64;
+    document.getElementById('heroPreview').style.display = 'block';
+    document.getElementById('heroFileName').textContent = name;
+    toast('背景图已加载', 'success');
+  });
+}
+
+function handleWorkUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  readFileAsBase64(file, (base64, name) => {
+    tempWorkImage = base64;
+    document.getElementById('workPreview').src = base64;
+    document.getElementById('workPreview').style.display = 'block';
+    document.getElementById('wImageBase64').value = base64;
+    document.getElementById('workFileName').textContent = name;
+    toast('图片已加载', 'success');
+  });
+}
+
+// Drag & drop for uploads
+function setupDragDrop(areaId, inputId) {
+  const area = document.getElementById(areaId);
+  if (!area) return;
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+  area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+  area.addEventListener('drop', e => {
+    e.preventDefault(); area.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      const input = document.getElementById(inputId);
+      const dt = new DataTransfer();
+      dt.items.add(files[0]);
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+}
+
+// ==================== Profile ====================
+function renderProfile() {
+  const p = siteData.profile || {};
+  document.getElementById('pName').value = p.name || '';
+  document.getElementById('pRole').value = p.role || '';
+  document.getElementById('pBio').value = p.bio || '';
+  document.getElementById('pEmail').value = p.email || '';
+  document.getElementById('pLocation').value = p.location || '';
+  document.getElementById('pHeroTitle').value = p.heroTitle || '';
+  document.getElementById('pHeroSubtitle').value = p.heroSubtitle || '';
+  tempAvatar = null;
+  tempHero = null;
+
+  const avatar = p.avatar || '';
+  if (avatar.startsWith('data:')) {
+    document.getElementById('avatarPreview').src = avatar;
+    document.getElementById('avatarPreview').style.display = 'block';
+    document.getElementById('avatarFileName').textContent = '当前为 base64 存储';
+  } else if (avatar) {
+    document.getElementById('avatarPreview').src = avatar;
+    document.getElementById('avatarPreview').style.display = 'block';
+    document.getElementById('avatarFileName').textContent = avatar.replace(/^\.\//, '');
+  } else {
+    document.getElementById('avatarPreview').style.display = 'none';
+    document.getElementById('avatarFileName').textContent = '';
+  }
+
+  const hero = p.heroImage || '';
+  if (hero.startsWith('data:')) {
+    document.getElementById('heroPreview').src = hero;
+    document.getElementById('heroPreview').style.display = 'block';
+    document.getElementById('heroFileName').textContent = '当前为 base64 存储';
+  } else if (hero) {
+    document.getElementById('heroPreview').src = hero;
+    document.getElementById('heroPreview').style.display = 'block';
+    document.getElementById('heroFileName').textContent = hero.replace(/^\.\//, '');
+  } else {
+    document.getElementById('heroPreview').style.display = 'none';
+    document.getElementById('heroFileName').textContent = '';
+  }
+}
+
+function saveProfile() {
+  const p = siteData.profile || {};
+  p.name = document.getElementById('pName').value.trim();
+  p.role = document.getElementById('pRole').value.trim();
+  p.bio = document.getElementById('pBio').value.trim();
+  p.email = document.getElementById('pEmail').value.trim();
+  p.location = document.getElementById('pLocation').value.trim();
+  p.heroTitle = document.getElementById('pHeroTitle').value.trim();
+  p.heroSubtitle = document.getElementById('pHeroSubtitle').value.trim();
+  if (tempAvatar) p.avatar = tempAvatar;
+  if (tempHero) p.heroImage = tempHero;
+  siteData.profile = p;
+  saveDataSilent();
+  toast('个人资料已保存', 'success');
+}
+
+// ==================== Data Management ====================
+function exportData() {
+  const dataStr = JSON.stringify(siteData, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'photography-portfolio-data-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('数据已导出', 'success');
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('importFileName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      importedJson = JSON.parse(ev.target.result);
+      toast('文件已读取，请确认导入', 'info');
+    } catch (err) {
+      importedJson = null;
+      toast('无效的 JSON 文件', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function confirmImport() {
+  if (!importedJson) return toast('请先选择文件', 'error');
+  try {
+    if (importedJson.profile && importedJson.works && Array.isArray(importedJson.works)) {
+      siteData = importedJson;
+      saveToStorage(true);
+      renderAll();
+      toast('数据导入成功', 'success');
+      importedJson = null;
+      document.getElementById('importFileName').textContent = '';
+      document.getElementById('importInput').value = '';
+    } else {
+      toast('数据格式不正确', 'error');
+    }
+  } catch (err) {
+    toast('导入失败', 'error');
+  }
+}
+
+function clearImport() {
+  importedJson = null;
+  document.getElementById('importFileName').textContent = '';
+  document.getElementById('importInput').value = '';
+}
+
+function openResetConfirm() {
+  document.getElementById('resetModal').classList.add('open');
+}
+function closeResetModal() {
+  document.getElementById('resetModal').classList.remove('open');
+}
+function doReset() {
+  siteData = getDefaultData();
+  saveToStorage(true);
+  renderAll();
+  closeResetModal();
+  toast('已重置为默认数据', 'success');
+}
+
+function renderAll() {
+  const currentPage = document.querySelector('.page.active');
+  if (currentPage) {
+    const pageId = currentPage.id.replace('page-', '');
+    if (pageId === 'dashboard') renderDashboard();
+    if (pageId === 'works') renderWorks();
+    if (pageId === 'profile') renderProfile();
+  }
+}
+
+// ==================== Init ====================
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+  setupDragDrop('avatarUpload', 'avatarInput');
+  setupDragDrop('heroUpload', 'heroInput');
+  setupDragDrop('workUpload', 'workInput');
+  setupDragDrop('importUpload', 'importInput');
+  renderDashboard();
+
+  // Listen for storage changes from other tabs
+  window.addEventListener('storage', e => {
+    if (e.key === 'siteData') {
+      loadData();
+      renderAll();
+      toast('检测到外部数据更新，已自动刷新', 'info');
+    }
+  });
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  // Close modals on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.open').forEach(o => o.classList.remove('open'));
+    }
+  });
+});
+</script>
+</body>
+</html>
