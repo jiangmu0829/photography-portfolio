@@ -520,7 +520,7 @@
       </div>
       <div class="topbar-actions">
         <span style="font-size:12px;color:var(--text-muted);" id="lastSaved"></span>
-        <button type="button" class="btn btn-primary btn-sm" onclick="saveToStorage()">
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveCurrentPage()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           保存数据
         </button>
@@ -2025,6 +2025,29 @@ function cleanImages() {
 }
 
 function renderAll() {
+  const currentPage = document.querySelector('.page.active');
+  if (currentPage) {
+    const pageId = currentPage.id.replace('page-', '');
+    if (pageId === 'dashboard') renderDashboard();
+    if (pageId === 'works') renderWorks();
+    if (pageId === 'gallery') renderGallery();
+    if (pageId === 'categories') renderCategories();
+    if (pageId === 'profile') renderProfile();
+  }
+}
+
+function saveCurrentPage() {
+  const currentPage = document.querySelector('.page.active');
+  if (currentPage) {
+    const pageId = currentPage.id.replace('page-', '');
+    if (pageId === 'profile') { saveProfile(); return; }
+    if (pageId === 'works') { if (document.getElementById('workModal').classList.contains('open')) { saveWork(); } else { toast('请打开编辑窗口后保存', 'info'); } return; }
+    if (pageId === 'categories') { if (document.getElementById('categoryModal').classList.contains('open')) { saveCategory(); } else { saveToStorage(); toast('数据已保存', 'success'); } return; }
+    saveToStorage();
+    toast('数据已保存', 'success');
+  }
+}
+// ==================== Init ====================
   const currentPage = document.querySelector('.page.active');
   if (currentPage) {
     const pageId = currentPage.id.replace('page-', '');
