@@ -454,6 +454,19 @@
   }
   .mobile-menu-btn { display: none; }
   @media (max-width: 768px) { .mobile-menu-btn { display: flex; } }
+
+  /* Color picker */
+  .color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-option { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+  .color-option:hover { transform: scale(1.1); }
+  .color-option.selected { border-color: var(--text); box-shadow: 0 0 0 2px var(--bg); }
+  .color-custom-wrap { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .color-custom-wrap input[type="color"] {
+    width: 40px; height: 32px; border: none; border-radius: 4px; cursor: pointer; background: none;
+  }
+  .color-custom-wrap span { font-size: 12px; color: var(--text-muted); }
+  .badge-custom { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -476,6 +489,10 @@
       <div class="nav-item" data-page="gallery" onclick="switchPage('gallery')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
         <span>分类画廊</span>
+      </div>
+      <div class="nav-item" data-page="categories" onclick="switchPage('categories')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <span>分类管理</span>
       </div>
       <div class="nav-item" data-page="profile" onclick="switchPage('profile')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -513,33 +530,9 @@
     <div class="content" id="content">
       <!-- Dashboard -->
       <div class="page active" id="page-dashboard">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="label">作品总数</div>
-            <div class="value" id="statTotal">0</div>
-            <div class="note" id="statTotalNote">张精选作品</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">人像作品</div>
-            <div class="value" id="statPortrait">0</div>
-            <div class="note">张</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">风光作品</div>
-            <div class="value" id="statLandscape">0</div>
-            <div class="note">张</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">纪实作品</div>
-            <div class="value" id="statDocumentary">0</div>
-            <div class="note">张</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">商业作品</div>
-            <div class="value" id="statCommercial">0</div>
-            <div class="note">张</div>
-          </div>
-        </div>
+        <div class="stats-grid" id="dashboardStats">
+        <!-- Dynamic stats rendered here -->
+      </div>
 
         <div class="card">
           <div class="card-header"><h2>分类分布</h2></div>
@@ -602,11 +595,7 @@
           </div>
           <div class="card-body">
             <div class="category-filter" id="galleryFilter">
-              <button class="category-btn active" data-cat="all" onclick="filterGallery('all')">全部</button>
-              <button class="category-btn portrait" data-cat="portrait" onclick="filterGallery('portrait')">人像</button>
-              <button class="category-btn landscape" data-cat="landscape" onclick="filterGallery('landscape')">风光</button>
-              <button class="category-btn documentary" data-cat="documentary" onclick="filterGallery('documentary')">纪实</button>
-              <button class="category-btn commercial" data-cat="commercial" onclick="filterGallery('commercial')">商业</button>
+              <!-- Dynamically rendered by JS -->
             </div>
             <div class="gallery-view active" id="galleryGridView">
               <div class="gallery-grid" id="galleryGrid"></div>
@@ -629,6 +618,26 @@
                   <tbody id="galleryTable"></tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="page" id="page-categories">
+        <div class="card">
+          <div class="card-header">
+            <h2>分类管理</h2>
+            <button class="btn btn-primary btn-sm" onclick="openCategoryModal()">+ 添加分类</button>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>名称</th><th>标识</th><th>颜色</th><th>作品数量</th><th>操作</th></tr>
+                </thead>
+                <tbody id="categoriesTable"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -662,6 +671,50 @@
                 <label>所在城市</label>
                 <input type="text" id="pLocation" placeholder="中国 · 上海">
               </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>电话</label>
+                <input type="text" id="pPhone" placeholder="+86 138 0000 0000">
+              </div>
+              <div class="form-group">
+                <label>微信</label>
+                <input type="text" id="pWechat" placeholder="微信号">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>个人网站</label>
+                <input type="text" id="pWebsite" placeholder="https://jiangmu.photo">
+              </div>
+              <div class="form-group">
+                <label>Instagram</label>
+                <input type="text" id="pInstagram" placeholder="@jiangmu">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>微博</label>
+                <input type="text" id="pWeibo" placeholder="微博链接或昵称">
+              </div>
+              <div class="form-group">
+                <label>小红书</label>
+                <input type="text" id="pXiaohongshu" placeholder="小红书号">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Behance</label>
+                <input type="text" id="pBehance" placeholder="Behance 链接">
+              </div>
+              <div class="form-group">
+                <label>从业年限</label>
+                <input type="text" id="pExperience" placeholder="例如：10年">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>获奖情况</label>
+              <textarea id="pAwards" placeholder="获奖记录、展览经历..."></textarea>
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -788,10 +841,7 @@ Instagram, https://instagram.com
         <div class="form-group">
           <label>分类</label>
           <select id="wCategory">
-            <option value="portrait">人像</option>
-            <option value="landscape">风光</option>
-            <option value="documentary">纪实</option>
-            <option value="commercial">商业</option>
+            <!-- Dynamically populated by populateCategorySelect() -->
           </select>
         </div>
       </div>
@@ -847,6 +897,43 @@ Instagram, https://instagram.com
   </div>
 </div>
 
+<!-- Category Modal -->
+<div class="modal-overlay" id="categoryModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h3 id="catModalTitle">添加分类</h3><button class="modal-close" onclick="closeCategoryModal()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="catEditKey">
+      <div class="form-group">
+        <label>分类名称</label>
+        <input type="text" id="catName" placeholder="例如：人像">
+      </div>
+      <div class="form-group">
+        <label>分类标识</label>
+        <input type="text" id="catKey" placeholder="例如：portrait">
+        <p class="hint">只能用小写字母和数字，添加后不可修改</p>
+      </div>
+      <div class="form-group">
+        <label>颜色</label>
+        <div class="color-picker" id="colorPicker">
+          <div class="color-option" style="background:#D4A853" data-color="#D4A853" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background:#53A0D4" data-color="#53A0D4" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background:#53D4A0" data-color="#53D4A0" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background:#D453B8" data-color="#D453B8" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background:#D45353" data-color="#D45353" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background:#D49A53" data-color="#D49A53" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background:#53D4D4" data-color="#53D4D4" onclick="selectColor(this)"></div>
+          <div class="color-option" style="background:#D453D4" data-color="#D453D4" onclick="selectColor(this)"></div>
+        </div>
+        <input type="hidden" id="catColor">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeCategoryModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveCategory()">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- Reset Confirm Modal -->
 <div class="modal-overlay" id="resetModal">
   <div class="modal" style="max-width:380px;">
@@ -867,16 +954,27 @@ Instagram, https://instagram.com
 <script>
 // ==================== Default Data ====================
 const CATEGORIES = {
-  all: "全部", portrait: "人像", landscape: "风光", documentary: "纪实", commercial: "商业"
+  all: { label: "全部", color: "#999", key: "all" },
+  portrait: { label: "人像", color: "#D4A853", key: "portrait" },
+  landscape: { label: "风光", color: "#53A0D4", key: "landscape" },
+  documentary: { label: "纪实", color: "#53D4A0", key: "documentary" },
+  commercial: { label: "商业", color: "#D453B8", key: "commercial" }
 };
 
-const CATEGORY_COLORS = {
-  portrait: '#D4A853', landscape: '#53A0D4', documentary: '#53D4A0', commercial: '#D453B8'
-};
+function getCategoryLabel(key) {
+  const cats = siteData?.categories || CATEGORIES;
+  return cats[key]?.label || key;
+}
 
-const BADGE_CLASSES = {
-  portrait: 'badge-portrait', landscape: 'badge-landscape', documentary: 'badge-documentary', commercial: 'badge-commercial'
-};
+function getCategoryColor(key) {
+  const cats = siteData?.categories || CATEGORIES;
+  return cats[key]?.color || '#999';
+}
+
+function getBadgeStyle(key) {
+  const color = getCategoryColor(key);
+  return `background:${color}20;color:${color};`;
+}
 
 const defaultProfile = {
   name: "江牧",
@@ -894,7 +992,16 @@ const defaultProfile = {
     { name: "Instagram", url: "https://instagram.com" },
     { name: "小红书", url: "https://xiaohongshu.com" },
     { name: "Behance", url: "https://behance.net" }
-  ]
+  ],
+  phone: "",
+  wechat: "",
+  instagram: "",
+  website: "",
+  weibo: "",
+  xiaohongshu: "",
+  behance: "",
+  experience: "",
+  awards: ""
 };
 
 const defaultWorks = [
@@ -928,7 +1035,7 @@ function getDefaultData() {
   return {
     profile: JSON.parse(JSON.stringify(defaultProfile)),
     works: JSON.parse(JSON.stringify(defaultWorks)),
-    categories: { ...CATEGORIES }
+    categories: JSON.parse(JSON.stringify(CATEGORIES))
   };
 }
 
@@ -942,6 +1049,7 @@ let tempWorkImage = null;
 let tempWorkFile = null;
 let galleryFilter = 'all';
 let galleryView = 'grid';
+let categoryEditingKey = null;
 
 function loadData() {
   try {
@@ -1015,6 +1123,7 @@ const pageTitles = {
   dashboard: '仪表盘',
   works: '作品管理',
   gallery: '分类画廊',
+  categories: '分类管理',
   profile: '个人资料',
   data: '数据管理'
 };
@@ -1029,6 +1138,7 @@ function switchPage(page) {
   if (page === 'dashboard') renderDashboard();
   if (page === 'works') renderWorks();
   if (page === 'gallery') renderGallery();
+  if (page === 'categories') renderCategories();
   if (page === 'profile') renderProfile();
   window.scrollTo(0, 0);
 }
@@ -1040,43 +1150,44 @@ function toggleSidebar() {
 // ==================== Dashboard ====================
 function renderDashboard() {
   const works = siteData.works || [];
-  const counts = { portrait: 0, landscape: 0, documentary: 0, commercial: 0 };
+  const cats = siteData.categories || CATEGORIES;
+  const counts = {};
+
+  Object.keys(cats).forEach(key => {
+    if (key !== 'all') counts[key] = 0;
+  });
   works.forEach(w => { if (counts[w.category] !== undefined) counts[w.category]++; });
 
-  document.getElementById('statTotal').textContent = works.length;
-  document.getElementById('statPortrait').textContent = counts.portrait;
-  document.getElementById('statLandscape').textContent = counts.landscape;
-  document.getElementById('statDocumentary').textContent = counts.documentary;
-  document.getElementById('statCommercial').textContent = counts.commercial;
-  document.getElementById('statTotalNote').textContent = '张精选作品' + (works.length >= 24 ? '（已满）' : '');
+  const statsGrid = document.getElementById('dashboardStats');
+  let statsHtml = `<div class="stat-card"><div class="label">作品总数</div><div class="value">${works.length}</div><div class="note">张精选作品${works.length >= 24 ? '（已满）' : ''}</div></div>`;
+  Object.entries(cats).forEach(([key, cat]) => {
+    if (key === 'all') return;
+    statsHtml += `<div class="stat-card"><div class="label">${cat.label}作品</div><div class="value" style="color:${cat.color}">${counts[key] || 0}</div><div class="note">张</div></div>`;
+  });
+  statsGrid.innerHTML = statsHtml;
 
-  // Distribution bars
   const total = works.length || 1;
-  const dist = [
-    { label: '人像', key: 'portrait', count: counts.portrait },
-    { label: '风光', key: 'landscape', count: counts.landscape },
-    { label: '纪实', key: 'documentary', count: counts.documentary },
-    { label: '商业', key: 'commercial', count: counts.commercial }
-  ];
+  const dist = Object.entries(cats)
+    .filter(([key]) => key !== 'all')
+    .map(([key, cat]) => ({ label: cat.label, key, count: counts[key] || 0, color: cat.color }));
+
   const distHtml = dist.map(d => {
     const pct = Math.round((d.count / total) * 100);
-    const color = CATEGORY_COLORS[d.key];
     return `<div class="dist-bar">
       <div class="dist-bar-label">${d.label}</div>
-      <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+      <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${pct}%;background:${d.color};"></div></div>
       <div class="dist-bar-value">${d.count}</div>
     </div>`;
   }).join('');
   document.getElementById('distributionBody').innerHTML = distHtml;
 
-  // Recent works (last 6 by date desc)
   const recent = [...works].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6);
   const tbody = document.getElementById('recentWorksTable');
   tbody.innerHTML = recent.map(w => `
     <tr>
-      <td><img class="table-thumb" src="${w.thumb || w.image}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'table-thumb error\\'>无图</div>'"></td>
+      <td><img class="table-thumb" src="${w.thumb || w.image}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\'table-thumb error\'>无图</div>'"></td>
       <td>${w.title}</td>
-      <td><span class="badge ${BADGE_CLASSES[w.category] || 'badge-gold'}">${CATEGORIES[w.category] || w.category}</span></td>
+      <td><span class="badge badge-custom" style="${getBadgeStyle(w.category)}">${getCategoryLabel(w.category)}</span></td>
       <td>${w.date || '-'}</td>
     </tr>
   `).join('');
@@ -1084,7 +1195,6 @@ function renderDashboard() {
     tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><p>暂无作品</p></td></tr>';
   }
 }
-
 // ==================== Works ====================
 function renderWorks() {
   const tbody = document.getElementById('worksTable');
@@ -1097,9 +1207,9 @@ function renderWorks() {
     const img = w.thumb || w.image || '';
     const src = img;
     return `<tr>
-      <td><img class="table-thumb" src="${src}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'table-thumb error\\'>无图</div>'"></td>
+      <td><img class="table-thumb" src="${src}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\'table-thumb error\'>无图</div>'"></td>
       <td>${w.title || '-'}</td>
-      <td><span class="badge ${BADGE_CLASSES[w.category] || 'badge-gold'}">${CATEGORIES[w.category] || w.category}</span></td>
+      <td><span class="badge badge-custom" style="${getBadgeStyle(w.category)}">${getCategoryLabel(w.category)}</span></td>
       <td>${w.date || '-'}</td>
       <td>${w.location || '-'}</td>
       <td>${w.camera || '-'}</td>
@@ -1111,12 +1221,12 @@ function renderWorks() {
     </tr>`;
   }).join('');
 }
-
 function openWorkModal() {
   editingWorkId = null;
   document.getElementById('workModalTitle').textContent = '添加作品';
   document.getElementById('wId').value = '';
   document.getElementById('wTitle').value = '';
+  populateCategorySelect('wCategory');
   document.getElementById('wCategory').value = 'portrait';
   document.getElementById('wDescription').value = '';
   document.getElementById('wDate').value = '';
@@ -1134,6 +1244,120 @@ function openWorkModal() {
   document.getElementById('workModal').classList.add('open');
 }
 
+function closeWorkModal() {
+  document.getElementById('workModal').classList.remove('open');
+}
+
+function editWork(id) {
+  const w = (siteData.works || []).find(x => x.id === id);
+  if (!w) return toast('作品未找到', 'error');
+  editingWorkId = id;
+  document.getElementById('workModalTitle').textContent = '编辑作品';
+  document.getElementById('wId').value = w.id;
+  document.getElementById('wTitle').value = w.title || '';
+  populateCategorySelect('wCategory');
+  document.getElementById('wCategory').value = w.category || 'portrait';
+  document.getElementById('wDescription').value = w.description || '';
+  document.getElementById('wDate').value = w.date || '';
+  document.getElementById('wLocation').value = w.location || '';
+  document.getElementById('wCamera').value = w.camera || '';
+  document.getElementById('wLens').value = w.lens || '';
+  tempWorkImage = null;
+  const img = w.image || w.thumb || '';
+  if (img.startsWith('data:')) {
+    document.getElementById('workPreview').src = img;
+    document.getElementById('workPreview').style.display = 'block';
+    document.getElementById('wImageBase64').value = img;
+    document.getElementById('workFileName').textContent = '当前为 base64 存储';
+  } else if (img) {
+    document.getElementById('workPreview').src = img;
+    document.getElementById('workPreview').style.display = 'block';
+    document.getElementById('wImageBase64').value = '';
+    document.getElementById('workFileName').textContent = img.replace(/^\.\//, '');
+  } else {
+    document.getElementById('workPreview').style.display = 'none';
+    document.getElementById('workFileName').textContent = '';
+  }
+  document.getElementById('workModal').classList.add('open');
+}
+
+function populateCategorySelect(selectId) {
+  const select = document.getElementById(selectId);
+  const cats = siteData.categories || CATEGORIES;
+  select.innerHTML = '';
+  Object.entries(cats).forEach(([key, cat]) => {
+    if (key === 'all') return;
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = cat.label;
+    select.appendChild(option);
+  });
+}
+
+function saveWork() {
+  const title = document.getElementById('wTitle').value.trim();
+  const hasNewImage = !!tempWorkImage;
+  const hasBase64 = !!document.getElementById('wImageBase64').value;
+  let hasExistingImage = false;
+  if (editingWorkId) {
+    const existing = (siteData.works || []).find(w => w.id === editingWorkId);
+    hasExistingImage = existing && !!(existing.image || existing.thumb);
+  }
+  const hasImage = hasNewImage || hasBase64 || hasExistingImage;
+
+  if (!title && !hasImage) {
+    return toast('请填写作品标题并上传图片', 'error');
+  }
+  if (!title) {
+    return toast('请输入作品标题', 'error');
+  }
+
+  const category = document.getElementById('wCategory').value;
+  const description = document.getElementById('wDescription').value.trim();
+  const date = document.getElementById('wDate').value;
+  const location = document.getElementById('wLocation').value.trim();
+  const camera = document.getElementById('wCamera').value.trim();
+  const lens = document.getElementById('wLens').value.trim();
+
+  let image, thumb;
+  if (tempWorkImage) {
+    image = tempWorkImage;
+    thumb = tempWorkImage;
+  } else if (document.getElementById('wImageBase64').value) {
+    image = document.getElementById('wImageBase64').value;
+    thumb = image;
+  } else if (editingWorkId) {
+    const existing = (siteData.works || []).find(w => w.id === editingWorkId);
+    image = existing ? (existing.image || '') : '';
+    thumb = existing ? (existing.thumb || image) : image;
+  } else {
+    image = '';
+    thumb = '';
+  }
+
+  if (!editingWorkId) {
+    const newId = 'w' + Date.now().toString(36);
+    siteData.works.push({
+      id: newId, title, category, image, thumb, description,
+      date, location, camera, lens
+    });
+  } else {
+    const idx = siteData.works.findIndex(w => w.id === editingWorkId);
+    if (idx >= 0) {
+      siteData.works[idx] = {
+        ...siteData.works[idx], title, category, image, thumb, description,
+        date, location, camera, lens
+      };
+    }
+  }
+  if (saveDataSilent()) {
+    toast(!editingWorkId ? '作品已添加' : '作品已更新', 'success');
+  } else {
+    toast('保存失败，请检查数据大小', 'error');
+  }
+  closeWorkModal();
+  renderAll();
+}
 function closeWorkModal() {
   document.getElementById('workModal').classList.remove('open');
 }
@@ -1399,6 +1623,194 @@ function switchGalleryView(view) {
   renderGallery();
 }
 
+function renderGalleryFilter() {
+  const filterContainer = document.getElementById('galleryFilter');
+  const cats = siteData.categories || CATEGORIES;
+  filterContainer.innerHTML = Object.entries(cats).map(([key, cat]) => {
+    const isActive = galleryFilter === key ? 'active' : '';
+    return `<button class="category-btn ${isActive}" data-cat="${key}" onclick="filterGallery('${key}')">${cat.label}</button>`;
+  }).join('');
+}
+
+function filterGallery(cat) {
+  galleryFilter = cat;
+  renderGalleryFilter();
+  renderGallery();
+}
+
+function renderGallery() {
+  renderGalleryFilter();
+  const allWorks = siteData.works || [];
+  const filtered = galleryFilter === 'all' ? allWorks : allWorks.filter(w => w.category === galleryFilter);
+
+  if (galleryView === 'grid') {
+    const grid = document.getElementById('galleryGrid');
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p>该分类暂无作品</p></div>';
+      return;
+    }
+    grid.innerHTML = filtered.map(w => {
+      const img = w.image || w.thumb || '';
+      return `<div class="gallery-item" onclick="editWork('${w.id}')">
+        <img src="${img}" alt="${w.title}" loading="lazy" onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(135deg,#1a1a1a,#0d0d0d)'">
+        <div class="gallery-item-overlay">
+          <div class="gallery-item-title">${w.title || '未命名'}</div>
+          <div class="gallery-item-date">${w.date || ''} · ${getCategoryLabel(w.category)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    const tbody = document.getElementById('galleryTable');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>该分类暂无作品</p></td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.map(w => {
+      const img = w.thumb || w.image || '';
+      return `<tr>
+        <td><img class="table-thumb" src="${img}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\'table-thumb error\'>无图</div>'"></td>
+        <td>${w.title || '-'}</td>
+        <td><span class="badge badge-custom" style="${getBadgeStyle(w.category)}">${getCategoryLabel(w.category)}</span></td>
+        <td>${w.date || '-'}</td>
+        <td>${w.location || '-'}</td>
+        <td>${w.camera || '-'}</td>
+        <td>${w.lens || '-'}</td>
+        <td class="table-actions">
+          <button class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+}
+// ==================== Categories ====================
+function getCategoryWorksCount(key) {
+  const works = siteData.works || [];
+  return works.filter(w => w.category === key).length;
+}
+
+function renderCategories() {
+  const tbody = document.getElementById('categoriesTable');
+  const cats = siteData.categories || CATEGORIES;
+  if (!cats || !Object.keys(cats).length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><p>暂无分类</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = Object.entries(cats).map(([key, cat]) => {
+    if (key === 'all') return '';
+    const count = getCategoryWorksCount(key);
+    return `<tr>
+      <td><span class="badge badge-custom" style="${getBadgeStyle(key)}">${cat.label}</span></td>
+      <td><code style="font-size:12px;color:var(--text-muted);background:var(--bg-input);padding:2px 6px;border-radius:4px;">${key}</code></td>
+      <td><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${cat.color};vertical-align:middle;margin-right:6px;"></span>${cat.color}</td>
+      <td>${count}</td>
+      <td class="table-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openCategoryModal('${key}')">编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCategory('${key}')">删除</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function selectColor(el) {
+  document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('catColor').value = el.dataset.color;
+}
+
+function openCategoryModal(key) {
+  categoryEditingKey = key || null;
+  const modalTitle = document.getElementById('catModalTitle');
+  const keyInput = document.getElementById('catKey');
+  const nameInput = document.getElementById('catName');
+  const editKeyInput = document.getElementById('catEditKey');
+  const colorInput = document.getElementById('catColor');
+  
+  document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+  
+  if (key) {
+    const cats = siteData.categories || CATEGORIES;
+    const cat = cats[key];
+    if (!cat) return toast('分类不存在', 'error');
+    modalTitle.textContent = '编辑分类';
+    editKeyInput.value = key;
+    nameInput.value = cat.label || '';
+    keyInput.value = key;
+    keyInput.disabled = true;
+    colorInput.value = cat.color || '#999';
+    document.querySelectorAll('.color-option').forEach(o => {
+      if (o.dataset.color === cat.color) o.classList.add('selected');
+    });
+  } else {
+    modalTitle.textContent = '添加分类';
+    editKeyInput.value = '';
+    nameInput.value = '';
+    keyInput.value = '';
+    keyInput.disabled = false;
+    colorInput.value = '#D4A853';
+    document.querySelector('.color-option[data-color="#D4A853"]').classList.add('selected');
+  }
+  
+  document.getElementById('categoryModal').classList.add('open');
+}
+
+function closeCategoryModal() {
+  document.getElementById('categoryModal').classList.remove('open');
+  categoryEditingKey = null;
+}
+
+function saveCategory() {
+  const name = document.getElementById('catName').value.trim();
+  const key = document.getElementById('catKey').value.trim().toLowerCase();
+  const editKey = document.getElementById('catEditKey').value;
+  const color = document.getElementById('catColor').value || '#999';
+  
+  if (!name) return toast('请输入分类名称', 'error');
+  if (!key) return toast('请输入分类标识', 'error');
+  if (!/^[a-z0-9]+$/.test(key)) return toast('分类标识只能包含小写字母和数字', 'error');
+  
+  const cats = siteData.categories || { ...CATEGORIES };
+  
+  if (editKey) {
+    // Edit existing
+    if (!cats[editKey]) return toast('分类不存在', 'error');
+    cats[editKey] = { label: name, color, key: editKey };
+  } else {
+    // Add new
+    if (cats[key]) return toast('分类标识已存在', 'error');
+    cats[key] = { label: name, color, key };
+  }
+  
+  siteData.categories = cats;
+  if (saveDataSilent()) {
+    toast(editKey ? '分类已更新' : '分类已添加', 'success');
+  } else {
+    toast('保存失败', 'error');
+  }
+  closeCategoryModal();
+  renderCategories();
+  renderAll();
+}
+
+function deleteCategory(key) {
+  if (key === 'all') return toast('不能删除"全部"分类', 'error');
+  const count = getCategoryWorksCount(key);
+  if (count > 0) {
+    return toast(`该分类下有 ${count} 张作品，请先修改作品分类`, 'error');
+  }
+  if (!confirm(`确定要删除分类 "${getCategoryLabel(key)}" 吗？`)) return;
+  const cats = siteData.categories || CATEGORIES;
+  delete cats[key];
+  siteData.categories = cats;
+  if (saveDataSilent()) {
+    toast('分类已删除', 'success');
+  } else {
+    toast('保存失败', 'error');
+  }
+  renderCategories();
+  renderAll();
+}
+
 function filterGallery(cat) {
   galleryFilter = cat;
   document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
@@ -1462,6 +1874,15 @@ function renderProfile() {
   document.getElementById('pHeroTitle').value = p.heroTitle || '';
   document.getElementById('pHeroSubtitle').value = p.heroSubtitle || '';
   document.getElementById('pPhilosophy').value = p.philosophy || '';
+  document.getElementById('pPhone').value = p.phone || '';
+  document.getElementById('pWechat').value = p.wechat || '';
+  document.getElementById('pWebsite').value = p.website || '';
+  document.getElementById('pInstagram').value = p.instagram || '';
+  document.getElementById('pWeibo').value = p.weibo || '';
+  document.getElementById('pXiaohongshu').value = p.xiaohongshu || '';
+  document.getElementById('pBehance').value = p.behance || '';
+  document.getElementById('pExperience').value = p.experience || '';
+  document.getElementById('pAwards').value = p.awards || '';
 
   const socialLines = (p.social || []).map(s => `${s.name}, ${s.url}`).join('\n');
   document.getElementById('pSocial').value = socialLines;
@@ -1498,6 +1919,48 @@ function renderProfile() {
   }
 }
 
+function saveProfile() {
+  const p = siteData.profile || {};
+  p.name = document.getElementById('pName').value.trim();
+  p.role = document.getElementById('pRole').value.trim();
+  p.bio = document.getElementById('pBio').value.trim();
+  p.email = document.getElementById('pEmail').value.trim();
+  p.location = document.getElementById('pLocation').value.trim();
+  p.heroTitle = document.getElementById('pHeroTitle').value.trim();
+  p.heroSubtitle = document.getElementById('pHeroSubtitle').value.trim();
+  p.philosophy = document.getElementById('pPhilosophy').value.trim();
+  p.phone = document.getElementById('pPhone').value.trim();
+  p.wechat = document.getElementById('pWechat').value.trim();
+  p.website = document.getElementById('pWebsite').value.trim();
+  p.instagram = document.getElementById('pInstagram').value.trim();
+  p.weibo = document.getElementById('pWeibo').value.trim();
+  p.xiaohongshu = document.getElementById('pXiaohongshu').value.trim();
+  p.behance = document.getElementById('pBehance').value.trim();
+  p.experience = document.getElementById('pExperience').value.trim();
+  p.awards = document.getElementById('pAwards').value.trim();
+
+  const socialText = document.getElementById('pSocial').value.trim();
+  if (socialText) {
+    p.social = socialText.split('\n').map(line => {
+      const idx = line.indexOf(',');
+      if (idx > 0) {
+        return { name: line.slice(0, idx).trim(), url: line.slice(idx + 1).trim() };
+      }
+      return null;
+    }).filter(Boolean);
+  } else {
+    p.social = [];
+  }
+
+  if (tempAvatar) p.avatar = tempAvatar;
+  if (tempHero) p.heroImage = tempHero;
+  siteData.profile = p;
+  if (saveDataSilent()) {
+    toast('个人资料已保存', 'success');
+  } else {
+    toast('个人资料保存失败，请检查数据大小', 'error');
+  }
+}
 function saveProfile() {
   const p = siteData.profile || {};
   p.name = document.getElementById('pName').value.trim();
@@ -1640,10 +2103,10 @@ function renderAll() {
     if (pageId === 'dashboard') renderDashboard();
     if (pageId === 'works') renderWorks();
     if (pageId === 'gallery') renderGallery();
+    if (pageId === 'categories') renderCategories();
     if (pageId === 'profile') renderProfile();
   }
 }
-
 // ==================== Init ====================
 document.addEventListener('DOMContentLoaded', () => {
   loadData();

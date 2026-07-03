@@ -1166,10 +1166,25 @@
         { name: "Instagram", url: "https://instagram.com" },
         { name: "小红书", url: "https://xiaohongshu.com" },
         { name: "Behance", url: "https://behance.net" }
-      ]
+      ],
+      phone: "",
+      wechat: "",
+      instagram: "",
+      website: "",
+      weibo: "",
+      xiaohongshu: "",
+      behance: "",
+      experience: "10",
+      awards: ""
     };
 
-    const defaultCategories = { all: "全部", portrait: "人像", landscape: "风光", documentary: "纪实", commercial: "商业" };
+    const defaultCategories = {
+      all: { label: "全部", color: "#999", key: "all" },
+      portrait: { label: "人像", color: "#D4A853", key: "portrait" },
+      landscape: { label: "风光", color: "#53A0D4", key: "landscape" },
+      documentary: { label: "纪实", color: "#53D4A0", key: "documentary" },
+      commercial: { label: "商业", color: "#D453B8", key: "commercial" }
+    };
 
     const defaultWorks = workData.map((w, i) => {
       const idx = String(i + 1).padStart(2, '0');
@@ -1220,6 +1235,29 @@
           if (!p.social) p.social = JSON.parse(JSON.stringify(dp.social));
           if (!appData.works) appData.works = JSON.parse(JSON.stringify(defaultWorks));
           if (!appData.categories) appData.categories = JSON.parse(JSON.stringify(defaultCategories));
+          // Migrate old categories format {key: "label"} -> {key: {label, color, key}}
+          if (appData.categories) {
+            const firstValue = Object.values(appData.categories)[0];
+            if (typeof firstValue === 'string') {
+              const newCategories = {};
+              const colorMap = { all: '#999', portrait: '#D4A853', landscape: '#53A0D4', documentary: '#53D4A0', commercial: '#D453B8' };
+              Object.entries(appData.categories).forEach(([key, label]) => {
+                newCategories[key] = { label, color: colorMap[key] || '#999', key };
+              });
+              appData.categories = newCategories;
+              saveData();
+            }
+          }
+          // Backfill new profile fields
+          if (!p.phone) p.phone = '';
+          if (!p.wechat) p.wechat = '';
+          if (!p.instagram) p.instagram = '';
+          if (!p.website) p.website = '';
+          if (!p.weibo) p.weibo = '';
+          if (!p.xiaohongshu) p.xiaohongshu = '';
+          if (!p.behance) p.behance = '';
+          if (!p.experience) p.experience = '';
+          if (!p.awards) p.awards = '';
         } catch (e) {
           appData = getDefaultData();
           saveData();
@@ -1314,13 +1352,10 @@
       const cats = getCategories();
       const allWorks = getWorks();
 
-      const catGradients = {
-        all: 'linear-gradient(135deg, #1a1a1a, #0d0d0d)',
-        portrait: 'linear-gradient(135deg, #2a1a15, #1a0f0a)',
-        landscape: 'linear-gradient(135deg, #0f1a1a, #0a1212)',
-        documentary: 'linear-gradient(135deg, #1a1a0f, #12120a)',
-        commercial: 'linear-gradient(135deg, #1a151a, #0f0a0f)'
-      };
+      const catGradients = {};
+      Object.entries(cats).forEach(([key, cat]) => {
+        catGradients[key] = `linear-gradient(135deg, ${cat.color}, ${cat.color})`;
+      });
 
       const page = document.createElement('div');
       page.className = 'page';
@@ -1348,7 +1383,7 @@
                 <img src="${w.thumb || w.image}" alt="${w.title}" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded'); this.classList.add('img-fallback')">
                 <div class="overlay">
                   <div class="overlay-title">${w.title}</div>
-                  <div class="overlay-cat">${cats[w.category] || w.category}</div>
+                  <div class="overlay-cat">${cats[w.category]?.label || w.category}</div>
                 </div>
               </a>
             `).join('')}
@@ -1357,10 +1392,10 @@
 
         <section class="cat-entry-section">
           <div class="cat-entry-grid">
-            ${Object.entries(cats).map(([key, label]) => `
+            ${Object.entries(cats).map(([key, cat]) => `
               <a href="#/portfolio" class="cat-entry-card" data-cat="${key}" data-clickable>
                 <div class="cat-bg" style="background:${catGradients[key] || catGradients.all}"></div>
-                <div class="cat-title">${label}</div>
+                <div class="cat-title">${cat.label}</div>
                 <div class="cat-count">${getCategoryCount(key)} 件作品</div>
               </a>
             `).join('')}
@@ -1468,9 +1503,9 @@
           <p>每一帧都是时间的切片</p>
         </section>
         <div class="filter-bar" id="filterBar">
-          ${Object.entries(cats).map(([key, label]) => `
+          ${Object.entries(cats).map(([key, cat]) => `
             <button class="filter-btn ${currentFilter === key ? 'active' : ''}" data-cat="${key}" data-clickable>
-              ${label}<span class="filter-count"> · ${getCategoryCount(key)}</span>
+              ${cat.label}<span class="filter-count"> · ${getCategoryCount(key)}</span>
             </button>
           `).join('')}
         </div>
@@ -1480,7 +1515,7 @@
               <img src="${w.thumb || w.image}" alt="${w.title}" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded'); this.classList.add('img-fallback')">
               <div class="item-overlay">
                 <div class="item-title">${w.title}</div>
-                <div class="item-cat">${cats[w.category] || w.category}</div>
+                <div class="item-cat">${cats[w.category]?.label || w.category}</div>
                 <div class="item-date">${w.date || ''}</div>
               </div>
             </a>
@@ -1524,7 +1559,7 @@
             返回作品集
           </a>
           <h1>${work.title}</h1>
-          <span class="detail-cat">${cats[work.category] || work.category}</span>
+          <span class="detail-cat">${cats[work.category]?.label || work.category}</span>
           <p class="detail-desc">${work.description}</p>
           <div class="detail-info">
             <div class="info-item">
@@ -1558,7 +1593,7 @@
                   <img src="${w.thumb || w.image}" alt="${w.title}" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded'); this.classList.add('img-fallback')">
                   <div class="overlay">
                     <div class="overlay-title">${w.title}</div>
-                    <div class="overlay-cat">${cats[w.category] || w.category}</div>
+                    <div class="overlay-cat">${cats[w.category]?.label || w.category}</div>
                   </div>
                 </a>
               `).join('')}
