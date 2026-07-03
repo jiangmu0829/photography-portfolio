@@ -690,7 +690,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Hero 标题</label>
-                <input type="text" id="pHeroTitle" placeholder="陈默">
+                <input type="text" id="pHeroTitle" placeholder="江牧">
               </div>
               <div class="form-group">
                 <label>Hero 副标题</label>
@@ -744,6 +744,16 @@ Instagram, https://instagram.com
               <button class="btn btn-primary" onclick="confirmImport()">确认导入</button>
               <button class="btn btn-secondary" onclick="clearImport()">清空</button>
             </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>清理图片缓存</h2></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">如果保存失败提示"数据大小超过 10MB"，可以清理所有 base64 图片，恢复为默认路径。个人资料和文字信息不受影响。</p>
+            <button class="btn btn-secondary" onclick="cleanImages()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.6 2.4L2.4 21.6M2.4 2.4l19.2 19.2"/></svg>
+              清理 base64 图片
+            </button>
           </div>
         </div>
         <div class="card">
@@ -869,14 +879,14 @@ const BADGE_CLASSES = {
 };
 
 const defaultProfile = {
-  name: "陈默",
+  name: "江牧",
   role: "独立摄影师",
   bio: "用镜头叙述光影之间的故事。十年拍摄经验，专注于人像、风光与纪实摄影。作品曾刊登于《中国国家地理》《VISION青年视觉》等媒体。",
-  email: "hello@chenmo.photo",
+  email: "hello@jiangmu.photo",
   location: "中国 · 上海",
   avatar: "./author-avatar.jpg",
   heroImage: "./work-01.jpg",
-  heroTitle: "陈默",
+  heroTitle: "江牧",
   heroSubtitle: "独立摄影师 / 用镜头叙述光影",
   philosophy: "摄影于我，不是记录现实的工具，而是理解世界的方式。每一张照片都是一次选择——选择看见什么，选择忽略什么，选择在哪个瞬间按下快门。",
   social: [
@@ -957,9 +967,9 @@ function saveToStorage(notify = true) {
     const dataStr = JSON.stringify(siteData);
     const sizeBytes = new Blob([dataStr]).size;
     const sizeMB = sizeBytes / 1024 / 1024;
-    if (sizeMB > 5) {
-      toast('数据大小超过 5MB，无法保存到 localStorage。请删除一些图片或降低图片质量。', 'error');
-      throw new Error('Data size exceeds 4MB');
+    if (sizeMB > 10) {
+      toast('数据大小超过 10MB，无法保存到 localStorage。建议：1) 导出数据备份 2) 点击"清理图片"删除部分 base64 图片 3) 或重置为默认数据', 'error');
+      throw new Error('Data size exceeds limit');
     }
     localStorage.setItem('siteData', dataStr);
     document.getElementById('lastSaved').textContent = '已保存 ' + new Date().toLocaleTimeString();
@@ -977,7 +987,7 @@ function saveData() {
     saveToStorage(true);
     toast('数据已保存到 localStorage', 'success');
   } catch (e) {
-    if (e.message !== 'Data size exceeds 4MB') {
+    if (e.message !== 'Data size exceeds limit') {
       toast('保存失败', 'error');
     }
   }
@@ -1589,6 +1599,38 @@ function doReset() {
   renderAll();
   closeResetModal();
   toast('已重置为默认数据', 'success');
+}
+
+function cleanImages() {
+  // Replace all base64 images with default paths
+  let count = 0;
+  siteData.works.forEach((w, i) => {
+    const idx = String(i + 1).padStart(2, '0');
+    if (w.image && w.image.startsWith('data:')) {
+      w.image = './work-' + idx + '.jpg';
+      count++;
+    }
+    if (w.thumb && w.thumb.startsWith('data:')) {
+      w.thumb = './work-' + idx + '.jpg';
+      count++;
+    }
+  });
+  const p = siteData.profile;
+  if (p.avatar && p.avatar.startsWith('data:')) {
+    p.avatar = './author-avatar.jpg';
+    count++;
+  }
+  if (p.heroImage && p.heroImage.startsWith('data:')) {
+    p.heroImage = './work-01.jpg';
+    count++;
+  }
+  if (count > 0) {
+    saveDataSilent();
+    renderAll();
+    toast('已清理 ' + count + ' 张 base64 图片，恢复为默认路径', 'success');
+  } else {
+    toast('没有 base64 图片需要清理', 'info');
+  }
 }
 
 function renderAll() {

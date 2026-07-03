@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>陈默 · 摄影作品集</title>
+  <title>江牧 · 摄影作品集</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1093,7 +1093,7 @@
   <div class="cursor-ring" id="cursorRing"></div>
 
   <nav class="nav" id="nav">
-    <a href="#" class="nav-brand" data-clickable>陈默</a>
+    <a href="#" class="nav-brand" data-clickable>江牧</a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#" data-clickable>首页</a></li>
       <li><a href="#/portfolio" data-clickable>作品集</a></li>
@@ -1112,13 +1112,13 @@
   <main id="app"></main>
 
   <footer class="footer" id="footer">
-    <div class="footer-brand">陈默摄影</div>
+    <div class="footer-brand">江牧摄影</div>
     <div class="footer-links">
       <a href="#">首页</a>
       <a href="#/portfolio">作品集</a>
       <a href="#/about">关于我</a>
     </div>
-    <div class="footer-copy" id="footerCopy">© 2024 陈默 · 保留所有权利</div>
+    <div class="footer-copy" id="footerCopy">© 2024 江牧 · 保留所有权利</div>
   </footer>
 
   <script>
@@ -1151,14 +1151,14 @@
     ];
 
     const defaultProfile = {
-      name: "陈默",
+      name: "江牧",
       role: "独立摄影师",
-      bio: `陈默，独立摄影师，现居上海。专注于人像、风光与纪实摄影，致力于用镜头捕捉生活中稍纵即逝的光影与情感。\n\n从繁华都市的街头巷尾，到远离喧嚣的自然秘境，他的镜头始终对准那些容易被忽视却充满力量的瞬间。2015年开始全职摄影生涯，作品曾入选多个国内外摄影展，并与多家知名媒体及品牌建立长期合作。\n\n他相信，好的照片不是技术的炫耀，而是情感的传递。每一次快门，都是他与这个世界的一次真诚对话。`,
-      email: "hello@chenmo.photo",
+      bio: `江牧，独立摄影师，现居上海。专注于人像、风光与纪实摄影，致力于用镜头捕捉生活中稍纵即逝的光影与情感。\n\n从繁华都市的街头巷尾，到远离喧嚣的自然秘境，他的镜头始终对准那些容易被忽视却充满力量的瞬间。2015年开始全职摄影生涯，作品曾入选多个国内外摄影展，并与多家知名媒体及品牌建立长期合作。\n\n他相信，好的照片不是技术的炫耀，而是情感的传递。每一次快门，都是他与这个世界的一次真诚对话。`,
+      email: "hello@jiangmu.photo",
       location: "中国 · 上海",
       avatar: "./author-avatar.jpg",
       heroImage: "./work-01.jpg",
-      heroTitle: "陈默",
+      heroTitle: "江牧",
       heroSubtitle: "独立摄影师 / 用镜头叙述光影",
       philosophy: `摄影于我，不是记录现实的工具，而是理解世界的方式。每一张照片都是一次选择——选择看见什么，选择忽略什么，选择在哪个瞬间按下快门。我相信最动人的影像往往诞生于等待与偶然之间，在光线、情绪与时空的交汇点上。我的镜头追求的不是完美，而是真实；不是炫技，而是共情。`,
       social: [
@@ -1268,7 +1268,7 @@
 
     function updateYear() {
       const el = document.getElementById('footerCopy');
-      if (el) el.textContent = '© ' + new Date().getFullYear() + ' 陈默 · 保留所有权利';
+      if (el) el.textContent = '© ' + new Date().getFullYear() + ' 江牧 · 保留所有权利';
     }
 
     function render() {
@@ -1368,7 +1368,7 @@
           <div class="quote-mark">"</div>
           <p class="quote-text">摄影是光与影的诗歌，是时间的切片，也是灵魂与世界的对话。</p>
           <div class="quote-divider"></div>
-          <div class="quote-author">—— 陈默</div>
+          <div class="quote-author">—— 江牧</div>
         </section>
 
         <section class="intro-section">
@@ -1490,6 +1490,7 @@
         btn.addEventListener('click', () => {
           currentFilter = btn.dataset.cat;
           renderPortfolio(container);
+          setupImages();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       });
