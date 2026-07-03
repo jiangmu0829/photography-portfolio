@@ -1961,39 +1961,6 @@ function saveProfile() {
     toast('个人资料保存失败，请检查数据大小', 'error');
   }
 }
-function saveProfile() {
-  const p = siteData.profile || {};
-  p.name = document.getElementById('pName').value.trim();
-  p.role = document.getElementById('pRole').value.trim();
-  p.bio = document.getElementById('pBio').value.trim();
-  p.email = document.getElementById('pEmail').value.trim();
-  p.location = document.getElementById('pLocation').value.trim();
-  p.heroTitle = document.getElementById('pHeroTitle').value.trim();
-  p.heroSubtitle = document.getElementById('pHeroSubtitle').value.trim();
-  p.philosophy = document.getElementById('pPhilosophy').value.trim();
-
-  const socialText = document.getElementById('pSocial').value.trim();
-  if (socialText) {
-    p.social = socialText.split('\n').map(line => {
-      const idx = line.indexOf(',');
-      if (idx > 0) {
-        return { name: line.slice(0, idx).trim(), url: line.slice(idx + 1).trim() };
-      }
-      return null;
-    }).filter(Boolean);
-  } else {
-    p.social = [];
-  }
-
-  if (tempAvatar) p.avatar = tempAvatar;
-  if (tempHero) p.heroImage = tempHero;
-  siteData.profile = p;
-  if (saveDataSilent()) {
-    toast('个人资料已保存', 'success');
-  } else {
-    toast('个人资料保存失败，请检查数据大小', 'error');
-  }
-}
 
 // ==================== Data Management ====================
 function exportData() {
