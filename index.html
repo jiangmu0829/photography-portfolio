@@ -1345,7 +1345,7 @@
           <div class="featured-grid">
             ${works.map((w, i) => `
               <a href="#/work/${w.id}" class="work-card reveal" data-clickable style="animation-delay:${i * 0.04}s">
-                <img src="${w.thumb || w.image}" alt="${w.title}" loading="lazy">
+                <img src="${w.thumb || w.image}" alt="${w.title}" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded'); this.classList.add('img-fallback')">
                 <div class="overlay">
                   <div class="overlay-title">${w.title}</div>
                   <div class="overlay-cat">${cats[w.category] || w.category}</div>
@@ -1376,7 +1376,7 @@
 
         <section class="intro-section">
           <div class="intro-avatar-wrap">
-            <img src="${p.avatar}" alt="${p.name}" class="intro-avatar" loading="lazy">
+            <img src="${p.avatar}" alt="${p.name}" class="intro-avatar" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded'); this.classList.add('img-fallback')">
           </div>
           <div class="intro-text">
             <h3>${p.name} · ${p.role}</h3>
@@ -1476,8 +1476,8 @@
         </div>
         <div class="portfolio-grid" id="portfolioGrid">
           ${filtered.length ? filtered.map((w, i) => `
-            <a href="#/work/${w.id}" class="portfolio-item reveal" data-clickable style="animation-delay:${(i % 6) * 0.05}s">
-              <img src="${w.thumb || w.image}" alt="${w.title}" loading="lazy">
+            <a href="#/work/${w.id}" class="portfolio-item" data-clickable style="animation-delay:${(i % 6) * 0.05}s">
+              <img src="${w.thumb || w.image}" alt="${w.title}" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded'); this.classList.add('img-fallback')">
               <div class="item-overlay">
                 <div class="item-title">${w.title}</div>
                 <div class="item-cat">${cats[w.category] || w.category}</div>
@@ -1555,7 +1555,7 @@
             <div class="related-grid">
               ${related.map(w => `
                 <a href="#/work/${w.id}" class="work-card" data-clickable>
-                  <img src="${w.thumb || w.image}" alt="${w.title}" loading="lazy">
+                  <img src="${w.thumb || w.image}" alt="${w.title}" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded'); this.classList.add('img-fallback')">
                   <div class="overlay">
                     <div class="overlay-title">${w.title}</div>
                     <div class="overlay-cat">${cats[w.category] || w.category}</div>
@@ -1579,7 +1579,7 @@
       page.className = 'page';
       page.innerHTML = `
         <section class="about-hero">
-          <img src="${p.avatar}" alt="${p.name}" class="about-avatar" loading="lazy">
+          <img src="${p.avatar}" alt="${p.name}" class="about-avatar" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded'); this.classList.add('img-fallback')">
           <h1 class="about-name">${p.name}</h1>
           <p class="about-role">${p.role}</p>
           <p class="about-location">${p.location}</p>
