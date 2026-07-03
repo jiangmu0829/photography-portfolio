@@ -1134,6 +1134,10 @@ function loadData() {
   if (raw) {
     try { siteData = JSON.parse(raw); }
     catch (e) { siteData = getDefaultData(); saveToStorage(); }
+    if (!siteData || typeof siteData !== 'object' || Array.isArray(siteData)) {
+      siteData = getDefaultData();
+      saveToStorage();
+    }
   } else {
     siteData = getDefaultData();
     saveToStorage();
@@ -1161,16 +1165,6 @@ function loadData() {
     saveToStorage();
   }
 }
-  const raw = localStorage.getItem('siteData');
-  if (raw) {
-    try { siteData = JSON.parse(raw); }
-    catch (e) { siteData = getDefaultData(); saveToStorage(); }
-  } else {
-    siteData = getDefaultData();
-    saveToStorage();
-  }
-}
-
 function saveToStorage() {
   try {
     localStorage.setItem('siteData', JSON.stringify(siteData));
@@ -1179,13 +1173,6 @@ function saveToStorage() {
   } catch (e) {
     toast('保存失败: ' + e.message, 'error');
     return false;
-  }
-}
-  try {
-    localStorage.setItem('siteData', JSON.stringify(siteData));
-    document.getElementById('lastSaved').textContent = '已保存 ' + new Date().toLocaleTimeString();
-  } catch (e) {
-    toast('保存失败: ' + e.message, 'error');
   }
 }
 
@@ -1854,45 +1841,6 @@ function filterGallery(cat) {
   renderGallery();
 }
 
-function renderGallery() {
-  const allWorks = siteData.works || [];
-  const filtered = galleryFilter === 'all' ? allWorks : allWorks.filter(w => w.category === galleryFilter);
-
-  if (galleryView === 'grid') {
-    const grid = document.getElementById('galleryGrid');
-    if (!filtered.length) {
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p>该分类暂无作品</p></div>';
-      return;
-    }
-    grid.innerHTML = filtered.map(w => {
-      const img = w.image || w.thumb || '';
-      return `<div class="gallery-item" onclick="editWork('${w.id}')">
-        <img src="${img}" alt="${w.title}" loading="lazy" onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(135deg,#1a1a1a,#0d0d0d)'">
-        <div class="gallery-item-overlay">
-          <div class="gallery-item-title">${w.title || '未命名'}</div>
-          <div class="gallery-item-date">${w.date || ''} · ${CATEGORIES[w.category] || w.category}</div>
-        </div>
-      </div>`;
-    }).join('');
-  } else {
-    const tbody = document.getElementById('galleryTable');
-    if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>该分类暂无作品</p></td></tr>';
-      return;
-    }
-    tbody.innerHTML = filtered.map(w => {
-      const img = w.thumb || w.image || '';
-      return `<tr>
-        <td><img class="table-thumb" src="${img}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'table-thumb error\\'>无图</div>'"></td>
-        <td>${w.title || '-'}</td>
-        <td><span class="badge ${BADGE_CLASSES[w.category] || 'badge-gold'}">${CATEGORIES[w.category] || w.category}</span></td>
-        <td>${w.date || '-'}</td>
-        <td>${w.location || '-'}</td>
-        <td>${w.camera || '-'}</td>
-        <td>${w.lens || '-'}</td>
-        <td class="table-actions">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
-          <button type="button" class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
         </td>
       </tr>`;
     }).join('');
