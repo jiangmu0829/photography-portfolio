@@ -515,12 +515,12 @@
   <main class="main">
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
-        <button class="btn btn-secondary btn-sm mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <button type="button" class="btn btn-secondary btn-sm mobile-menu-btn" onclick="toggleSidebar()">☰</button>
         <span class="topbar-title" id="pageTitle">仪表盘</span>
       </div>
       <div class="topbar-actions">
         <span style="font-size:12px;color:var(--text-muted);" id="lastSaved"></span>
-        <button class="btn btn-primary btn-sm" onclick="saveData()">
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveToStorage()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           保存数据
         </button>
@@ -559,7 +559,7 @@
         <div class="card">
           <div class="card-header">
             <h2>作品列表</h2>
-            <button class="btn btn-primary btn-sm" onclick="openWorkModal()">+ 添加作品</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openWorkModal()">+ 添加作品</button>
           </div>
           <div class="card-body">
             <div class="table-wrap">
@@ -628,7 +628,7 @@
         <div class="card">
           <div class="card-header">
             <h2>分类管理</h2>
-            <button class="btn btn-primary btn-sm" onclick="openCategoryModal()">+ 添加分类</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openCategoryModal()">+ 添加分类</button>
           </div>
           <div class="card-body">
             <div class="table-wrap">
@@ -764,7 +764,7 @@ Instagram, https://instagram.com
               <p class="hint">每行一个，格式：名称, URL</p>
             </div>
             <div style="margin-top:8px;">
-              <button class="btn btn-primary" onclick="saveProfile()">保存个人资料</button>
+              <button type="button" class="btn btn-primary" onclick="saveProfile()">保存个人资料</button>
             </div>
           </div>
         </div>
@@ -776,7 +776,7 @@ Instagram, https://instagram.com
           <div class="card-header"><h2>导出数据</h2></div>
           <div class="card-body">
             <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">将所有数据导出为 JSON 文件，用于备份或迁移。</p>
-            <button class="btn btn-primary" onclick="exportData()">
+            <button type="button" class="btn btn-primary" onclick="exportData()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               导出 JSON
             </button>
@@ -794,8 +794,8 @@ Instagram, https://instagram.com
             </div>
             <input type="file" id="importInput" accept="application/json" style="display:none" onchange="handleImport(event)">
             <div style="margin-top:16px;">
-              <button class="btn btn-primary" onclick="confirmImport()">确认导入</button>
-              <button class="btn btn-secondary" onclick="clearImport()">清空</button>
+              <button type="button" class="btn btn-primary" onclick="confirmImport()">确认导入</button>
+              <button type="button" class="btn btn-secondary" onclick="clearImport()">清空</button>
             </div>
           </div>
         </div>
@@ -803,7 +803,7 @@ Instagram, https://instagram.com
           <div class="card-header"><h2>清理图片缓存</h2></div>
           <div class="card-body">
             <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">如果保存失败提示"数据大小超过 10MB"，可以清理所有 base64 图片，恢复为默认路径。个人资料和文字信息不受影响。</p>
-            <button class="btn btn-secondary" onclick="cleanImages()">
+            <button type="button" class="btn btn-secondary" onclick="cleanImages()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.6 2.4L2.4 21.6M2.4 2.4l19.2 19.2"/></svg>
               清理 base64 图片
             </button>
@@ -813,7 +813,7 @@ Instagram, https://instagram.com
           <div class="card-header"><h2>重置数据</h2></div>
           <div class="card-body">
             <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">将所有数据恢复到初始默认状态。此操作不可撤销。</p>
-            <button class="btn btn-danger" onclick="openResetConfirm()">
+            <button type="button" class="btn btn-danger" onclick="openResetConfirm()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               重置为默认数据
             </button>
@@ -829,7 +829,7 @@ Instagram, https://instagram.com
   <div class="modal">
     <div class="modal-header">
       <h3 id="workModalTitle">添加作品</h3>
-      <button class="modal-close" onclick="closeWorkModal()">✕</button>
+      <button type="button" class="modal-close" onclick="closeWorkModal()">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="wId">
@@ -891,8 +891,8 @@ Instagram, https://instagram.com
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeWorkModal()">取消</button>
-      <button class="btn btn-primary" onclick="saveWork()">保存</button>
+      <button type="button" class="btn btn-secondary" onclick="closeWorkModal()">取消</button>
+      <button type="button" class="btn btn-primary" onclick="saveWork()">保存</button>
     </div>
   </div>
 </div>
@@ -900,7 +900,7 @@ Instagram, https://instagram.com
 <!-- Category Modal -->
 <div class="modal-overlay" id="categoryModal">
   <div class="modal" style="max-width:480px;">
-    <div class="modal-header"><h3 id="catModalTitle">添加分类</h3><button class="modal-close" onclick="closeCategoryModal()">✕</button></div>
+    <div class="modal-header"><h3 id="catModalTitle">添加分类</h3><button type="button" class="modal-close" onclick="closeCategoryModal()">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="catEditKey">
       <div class="form-group">
@@ -928,8 +928,8 @@ Instagram, https://instagram.com
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeCategoryModal()">取消</button>
-      <button class="btn btn-primary" onclick="saveCategory()">保存</button>
+      <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">取消</button>
+      <button type="button" class="btn btn-primary" onclick="saveCategory()">保存</button>
     </div>
   </div>
 </div>
@@ -937,13 +937,13 @@ Instagram, https://instagram.com
 <!-- Reset Confirm Modal -->
 <div class="modal-overlay" id="resetModal">
   <div class="modal" style="max-width:380px;">
-    <div class="modal-header"><h3>确认重置</h3><button class="modal-close" onclick="closeResetModal()">✕</button></div>
+    <div class="modal-header"><h3>确认重置</h3><button type="button" class="modal-close" onclick="closeResetModal()">✕</button></div>
     <div class="modal-body confirm-dialog">
       <p>确定要重置所有数据到初始默认状态吗？<br>此操作不可撤销。</p>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeResetModal()">取消</button>
-      <button class="btn btn-danger" onclick="doReset()">确认重置</button>
+      <button type="button" class="btn btn-secondary" onclick="closeResetModal()">取消</button>
+      <button type="button" class="btn btn-danger" onclick="doReset()">确认重置</button>
     </div>
   </div>
 </div>
@@ -1181,8 +1181,8 @@ function renderWorks() {
       <td>${w.camera || '-'}</td>
       <td>${w.lens || '-'}</td>
       <td class="table-actions">
-        <button class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
       </td>
     </tr>`;
   }).join('');
@@ -1594,7 +1594,7 @@ function renderGalleryFilter() {
   const cats = siteData.categories || CATEGORIES;
   filterContainer.innerHTML = Object.entries(cats).map(([key, cat]) => {
     const isActive = galleryFilter === key ? 'active' : '';
-    return `<button class="category-btn ${isActive}" data-cat="${key}" onclick="filterGallery('${key}')">${cat.label}</button>`;
+    return `<button type="button" class="category-btn ${isActive}" data-cat="${key}" onclick="filterGallery('${key}')">${cat.label}</button>`;
   }).join('');
 }
 
@@ -1642,8 +1642,8 @@ function renderGallery() {
         <td>${w.camera || '-'}</td>
         <td>${w.lens || '-'}</td>
         <td class="table-actions">
-          <button class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
         </td>
       </tr>`;
     }).join('');
@@ -1671,8 +1671,8 @@ function renderCategories() {
       <td><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${cat.color};vertical-align:middle;margin-right:6px;"></span>${cat.color}</td>
       <td>${count}</td>
       <td class="table-actions">
-        <button class="btn btn-secondary btn-sm" onclick="openCategoryModal('${key}')">编辑</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteCategory('${key}')">删除</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openCategoryModal('${key}')">编辑</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteCategory('${key}')">删除</button>
       </td>
     </tr>`;
   }).join('');
@@ -1821,8 +1821,8 @@ function renderGallery() {
         <td>${w.camera || '-'}</td>
         <td>${w.lens || '-'}</td>
         <td class="table-actions">
-          <button class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="editWork('${w.id}')">编辑</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="deleteWork('${w.id}')">删除</button>
         </td>
       </tr>`;
     }).join('');
