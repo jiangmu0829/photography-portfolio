@@ -292,6 +292,27 @@
     font-size: 11px; color: var(--text-muted); margin-top: 4px;
   }
 
+  /* Upload tabs & URL mode */
+  .upload-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+  .upload-tab { padding: 5px 14px; border-radius: var(--radius); font-size: 12px; cursor: pointer; border: 1px solid var(--border); color: var(--text-secondary); background: var(--bg-card); transition: all var(--transition); }
+  .upload-tab:hover { border-color: var(--gold); color: var(--text); }
+  .upload-tab.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+  .upload-panel { display: none; }
+  .upload-panel.active { display: block; }
+  .url-input { width: 100%; padding: 10px 12px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: inherit; transition: border-color var(--transition); }
+  .url-input:focus { outline: none; border-color: var(--gold); }
+  .url-input::placeholder { color: var(--text-muted); }
+  .quality-select { margin-top: 10px; }
+  .quality-select label { font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+  .quality-select select { width: 100%; padding: 8px 12px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: inherit; transition: border-color var(--transition); }
+  .quality-select select:focus { outline: none; border-color: var(--gold); }
+  .url-preview { margin-top: 8px; max-width: 200px; border-radius: var(--radius); display: block; }
+  .url-status { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .url-status.ok { color: var(--green); }
+  .url-status.error { color: var(--red); }
+
+
+
   /* Modal */
   .modal-overlay {
     position: fixed; inset: 0; z-index: 200;
@@ -719,25 +740,63 @@
             <div class="form-row">
               <div class="form-group">
                 <label>头像</label>
-                <div class="upload-area" id="avatarUpload" onclick="document.getElementById('avatarInput').click()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <p>点击或拖拽上传头像</p>
-                  <p class="hint">建议尺寸 400×400px，自动压缩</p>
-                  <img id="avatarPreview" class="upload-preview" style="display:none;" alt="">
-                  <p class="upload-file-name" id="avatarFileName"></p>
+                <div class="upload-tabs">
+                  <div class="upload-tab active" id="avatarTab-file" onclick="switchUploadMode('avatar', 'file')">上传文件</div>
+                  <div class="upload-tab" id="avatarTab-url" onclick="switchUploadMode('avatar', 'url')">图片链接</div>
                 </div>
-                <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+                <div class="upload-panel active" id="avatarPanel-file">
+                  <div class="upload-area" id="avatarUpload" onclick="document.getElementById('avatarInput').click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <p>点击或拖拽上传头像</p>
+                    <p class="hint">建议尺寸 400×400px，自动压缩</p>
+                    <img id="avatarPreview" class="upload-preview" style="display:none;" alt="">
+                    <p class="upload-file-name" id="avatarFileName"></p>
+                  </div>
+                  <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+                  <div class="quality-select">
+                    <label>图片质量</label>
+                    <select id="avatarQuality">
+                      <option value="standard">标准 (400px, 80%)</option>
+                      <option value="high">高清 (800px, 90%)</option>
+                      <option value="original">原图 (5MB限制)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="upload-panel" id="avatarPanel-url">
+                  <input type="text" class="url-input" id="avatarUrl" placeholder="粘贴图片链接，例如 https://example.com/photo.jpg" onchange="handleUrlImage('avatar', this.value)">
+                  <img id="avatarUrlPreview" class="url-preview" style="display:none;" alt="">
+                  <p class="url-status" id="avatarUrlStatus"></p>
+                </div>
               </div>
               <div class="form-group">
                 <label>Hero 背景图</label>
-                <div class="upload-area" id="heroUpload" onclick="document.getElementById('heroInput').click()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <p>点击或拖拽上传 Hero 背景图</p>
-                  <p class="hint">建议宽度 1920px 以上，自动压缩</p>
-                  <img id="heroPreview" class="upload-preview" style="display:none;" alt="">
-                  <p class="upload-file-name" id="heroFileName"></p>
+                <div class="upload-tabs">
+                  <div class="upload-tab active" id="heroTab-file" onclick="switchUploadMode('hero', 'file')">上传文件</div>
+                  <div class="upload-tab" id="heroTab-url" onclick="switchUploadMode('hero', 'url')">图片链接</div>
                 </div>
-                <input type="file" id="heroInput" accept="image/*" style="display:none" onchange="handleHeroUpload(event)">
+                <div class="upload-panel active" id="heroPanel-file">
+                  <div class="upload-area" id="heroUpload" onclick="document.getElementById('heroInput').click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <p>点击或拖拽上传 Hero 背景图</p>
+                    <p class="hint">建议宽度 1920px 以上，自动压缩</p>
+                    <img id="heroPreview" class="upload-preview" style="display:none;" alt="">
+                    <p class="upload-file-name" id="heroFileName"></p>
+                  </div>
+                  <input type="file" id="heroInput" accept="image/*" style="display:none" onchange="handleHeroUpload(event)">
+                  <div class="quality-select">
+                    <label>图片质量</label>
+                    <select id="heroQuality">
+                      <option value="standard">标准 (1920px, 70%)</option>
+                      <option value="high">高清 (2560px, 85%)</option>
+                      <option value="original">原图 (5MB限制)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="upload-panel" id="heroPanel-url">
+                  <input type="text" class="url-input" id="heroUrl" placeholder="粘贴图片链接，例如 https://example.com/hero.jpg" onchange="handleUrlImage('hero', this.value)">
+                  <img id="heroUrlPreview" class="url-preview" style="display:none;" alt="">
+                  <p class="url-status" id="heroUrlStatus"></p>
+                </div>
               </div>
             </div>
             <div class="form-row">
@@ -851,23 +910,42 @@ Instagram, https://instagram.com
       </div>
       <div class="form-group">
         <label>图片</label>
-        <div class="upload-area" id="workUpload" onclick="document.getElementById('workInput').click()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <p>点击或拖拽上传图片</p>
-          <p class="hint">支持 JPG、PNG、WebP，自动压缩至 1200px</p>
-          <img id="workPreview" class="upload-preview" style="display:none;" alt="">
-          <p class="upload-file-name" id="workFileName"></p>
+        <div class="upload-tabs">
+          <div class="upload-tab active" id="workTab-file" onclick="switchUploadMode('work', 'file')">上传文件</div>
+          <div class="upload-tab" id="workTab-url" onclick="switchUploadMode('work', 'url')">图片链接</div>
         </div>
-        <input type="file" id="workInput" accept="image/*" style="display:none" onchange="handleWorkUpload(event)">
-        <div class="crop-controls" id="workCropControls">
-          <label class="crop-ratio-label">裁剪比例</label>
-          <select class="crop-ratio-select" id="workCropRatio" onchange="reprocessWorkImage()">
-            <option value="3/4">3:4 (竖构图 / 作品默认)</option>
-            <option value="16/9">16:9 (横构图 / Hero)</option>
-            <option value="1/1">1:1 (方形 / 头像)</option>
-            <option value="original">原始比例 (不裁剪)</option>
-          </select>
-          <p class="crop-hint">自动居中裁剪，按最大边压缩至 1200px</p>
+        <div class="upload-panel active" id="workPanel-file">
+          <div class="upload-area" id="workUpload" onclick="document.getElementById('workInput').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p>点击或拖拽上传图片</p>
+            <p class="hint">支持 JPG、PNG、WebP，自动压缩</p>
+            <img id="workPreview" class="upload-preview" style="display:none;" alt="">
+            <p class="upload-file-name" id="workFileName"></p>
+          </div>
+          <input type="file" id="workInput" accept="image/*" style="display:none" onchange="handleWorkUpload(event)">
+          <div class="crop-controls" id="workCropControls">
+            <label class="crop-ratio-label">裁剪比例</label>
+            <select class="crop-ratio-select" id="workCropRatio" onchange="reprocessWorkImage()">
+              <option value="3/4">3:4 (竖构图 / 作品默认)</option>
+              <option value="16/9">16:9 (横构图 / Hero)</option>
+              <option value="1/1">1:1 (方形 / 头像)</option>
+              <option value="original">原始比例 (不裁剪)</option>
+            </select>
+            <p class="crop-hint">自动居中裁剪</p>
+          </div>
+          <div class="quality-select">
+            <label>图片质量</label>
+            <select id="workQuality">
+              <option value="standard">标准 (1200px, 70%)</option>
+              <option value="high">高清 (2000px, 85%)</option>
+              <option value="original">原图 (5MB限制)</option>
+            </select>
+          </div>
+        </div>
+        <div class="upload-panel" id="workPanel-url">
+          <input type="text" class="url-input" id="workUrl" placeholder="粘贴图片链接，例如 https://example.com/photo.jpg" onchange="handleUrlImage('work', this.value)">
+          <img id="workUrlPreview" class="url-preview" style="display:none;" alt="">
+          <p class="url-status" id="workUrlStatus"></p>
         </div>
         <input type="hidden" id="wImageBase64">
       </div>
@@ -1231,16 +1309,27 @@ function editWork(id) {
   tempWorkImage = null;
   const img = w.image || w.thumb || '';
   if (img.startsWith('data:')) {
+    switchUploadMode('work', 'file');
     document.getElementById('workPreview').src = img;
     document.getElementById('workPreview').style.display = 'block';
     document.getElementById('wImageBase64').value = img;
     document.getElementById('workFileName').textContent = '当前为 base64 存储';
+  } else if (img.startsWith('http')) {
+    switchUploadMode('work', 'url');
+    document.getElementById('workUrl').value = img;
+    document.getElementById('workUrlPreview').src = img;
+    document.getElementById('workUrlPreview').style.display = 'block';
+    document.getElementById('workUrlStatus').textContent = '✓ 当前使用图片链接';
+    document.getElementById('workUrlStatus').className = 'url-status ok';
+    document.getElementById('wImageBase64').value = '';
   } else if (img) {
+    switchUploadMode('work', 'file');
     document.getElementById('workPreview').src = img;
     document.getElementById('workPreview').style.display = 'block';
     document.getElementById('wImageBase64').value = '';
     document.getElementById('workFileName').textContent = img.replace(/^\.\//, '');
   } else {
+    switchUploadMode('work', 'file');
     document.getElementById('workPreview').style.display = 'none';
     document.getElementById('workFileName').textContent = '';
   }
@@ -1344,16 +1433,27 @@ function editWork(id) {
   tempWorkImage = null;
   const img = w.image || w.thumb || '';
   if (img.startsWith('data:')) {
+    switchUploadMode('work', 'file');
     document.getElementById('workPreview').src = img;
     document.getElementById('workPreview').style.display = 'block';
     document.getElementById('wImageBase64').value = img;
     document.getElementById('workFileName').textContent = '当前为 base64 存储';
+  } else if (img.startsWith('http')) {
+    switchUploadMode('work', 'url');
+    document.getElementById('workUrl').value = img;
+    document.getElementById('workUrlPreview').src = img;
+    document.getElementById('workUrlPreview').style.display = 'block';
+    document.getElementById('workUrlStatus').textContent = '✓ 当前使用图片链接';
+    document.getElementById('workUrlStatus').className = 'url-status ok';
+    document.getElementById('wImageBase64').value = '';
   } else if (img) {
+    switchUploadMode('work', 'file');
     document.getElementById('workPreview').src = img;
     document.getElementById('workPreview').style.display = 'block';
     document.getElementById('wImageBase64').value = '';
     document.getElementById('workFileName').textContent = img.replace(/^\.\//, '');
   } else {
+    switchUploadMode('work', 'file');
     document.getElementById('workPreview').style.display = 'none';
     document.getElementById('workFileName').textContent = '';
   }
@@ -1440,9 +1540,19 @@ function compressAndCropImage(file, options, callback) {
     return;
   }
 
-  const maxWidth = options.maxWidth || 1200;
   const aspectRatio = options.aspectRatio || null;
-  const quality = options.quality || 0.7;
+  const qualityMode = options.qualityMode || 'standard';
+  let maxWidth, quality;
+  if (qualityMode === 'original') {
+    maxWidth = 99999;
+    quality = 0.95;
+  } else if (qualityMode === 'high') {
+    maxWidth = options.maxWidthHigh || (options.maxWidth * 1.5) || 1800;
+    quality = 0.85;
+  } else {
+    maxWidth = options.maxWidth || 1200;
+    quality = options.quality || 0.7;
+  }
 
   const reader = new FileReader();
   reader.onload = e => {
@@ -1451,21 +1561,17 @@ function compressAndCropImage(file, options, callback) {
       let { width, height } = img;
       let sx = 0, sy = 0, sw = width, sh = height;
 
-      // Center crop to target aspect ratio
       if (aspectRatio) {
         const currentRatio = width / height;
         if (currentRatio > aspectRatio) {
-          // Image is wider than target — crop width
           sw = height * aspectRatio;
           sx = (width - sw) / 2;
         } else {
-          // Image is taller than target — crop height
           sh = width / aspectRatio;
           sy = (height - sh) / 2;
         }
       }
 
-      // Resize to maxWidth
       let targetWidth = sw;
       let targetHeight = sh;
       if (targetWidth > maxWidth) {
@@ -1484,11 +1590,13 @@ function compressAndCropImage(file, options, callback) {
       function tryExport(q) {
         const base64 = canvas.toDataURL('image/jpeg', Math.max(0.1, q));
         const sizeKB = Math.round(base64.length / 1024);
-        if (sizeKB > 200 && q > 0.3) {
+        if (qualityMode === 'original') {
+          if (sizeKB > 5120 && q > 0.3) { tryExport(q - 0.05); return; }
+        } else if (sizeKB > 200 && q > 0.3) {
           tryExport(q - 0.05);
-        } else {
-          callback(base64, file.name, sizeKB);
+          return;
         }
+        callback(base64, file.name, sizeKB);
       }
 
       tryExport(quality);
@@ -1502,7 +1610,8 @@ function compressAndCropImage(file, options, callback) {
 
 // ==================== File Uploads ====================
 function processWorkImage(file, aspectRatio) {
-  compressAndCropImage(file, { maxWidth: 1200, aspectRatio: aspectRatio, quality: 0.7 }, (base64, name, sizeKB) => {
+  const qualityMode = document.getElementById('workQuality').value;
+  compressAndCropImage(file, { maxWidth: 1200, maxWidthHigh: 2000, aspectRatio: aspectRatio, qualityMode: qualityMode }, (base64, name, sizeKB) => {
     tempWorkImage = base64;
     document.getElementById('workPreview').src = base64;
     document.getElementById('workPreview').style.display = 'block';
@@ -1532,7 +1641,8 @@ function handleWorkUpload(e) {
 function handleAvatarUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  compressAndCropImage(file, { maxWidth: 400, aspectRatio: 1, quality: 0.8 }, (base64, name, sizeKB) => {
+  const qualityMode = document.getElementById('avatarQuality').value;
+  compressAndCropImage(file, { maxWidth: 400, maxWidthHigh: 800, aspectRatio: 1, qualityMode: qualityMode }, (base64, name, sizeKB) => {
     tempAvatar = base64;
     document.getElementById('avatarPreview').src = base64;
     document.getElementById('avatarPreview').style.display = 'block';
@@ -1544,7 +1654,8 @@ function handleAvatarUpload(e) {
 function handleHeroUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  compressAndCropImage(file, { maxWidth: 1920, aspectRatio: 16/9, quality: 0.7 }, (base64, name, sizeKB) => {
+  const qualityMode = document.getElementById('heroQuality').value;
+  compressAndCropImage(file, { maxWidth: 1920, maxWidthHigh: 2560, aspectRatio: 16/9, qualityMode: qualityMode }, (base64, name, sizeKB) => {
     tempHero = base64;
     document.getElementById('heroPreview').src = base64;
     document.getElementById('heroPreview').style.display = 'block';
@@ -1552,6 +1663,37 @@ function handleHeroUpload(e) {
     toast('背景图已处理 (16:9 居中裁剪)', 'success');
   });
 }
+
+
+function switchUploadMode(type, mode) {
+  document.getElementById(type + 'Tab-file').classList.toggle('active', mode === 'file');
+  document.getElementById(type + 'Tab-url').classList.toggle('active', mode === 'url');
+  document.getElementById(type + 'Panel-file').classList.toggle('active', mode === 'file');
+  document.getElementById(type + 'Panel-url').classList.toggle('active', mode === 'url');
+}
+
+function handleUrlImage(type, url) {
+  const status = document.getElementById(type + 'UrlStatus');
+  const preview = document.getElementById(type + 'UrlPreview');
+  if (!url) { status.textContent = ''; preview.style.display = 'none'; return; }
+  const img = new Image();
+  img.onload = () => {
+    preview.src = url;
+    preview.style.display = 'block';
+    status.textContent = '✓ 图片链接有效 (' + img.naturalWidth + 'x' + img.naturalHeight + ')';
+    status.className = 'url-status ok';
+    if (type === 'avatar') tempAvatar = url;
+    if (type === 'hero') tempHero = url;
+    if (type === 'work') tempWorkImage = url;
+  };
+  img.onerror = () => {
+    preview.style.display = 'none';
+    status.textContent = '✗ 图片链接无效，请检查 URL';
+    status.className = 'url-status error';
+  };
+  img.src = url;
+}
+
 
 // Drag & drop for uploads
 function setupDragDrop(areaId, inputId) {
@@ -1858,28 +2000,48 @@ function renderProfile() {
 
   const avatar = p.avatar || '';
   if (avatar.startsWith('data:')) {
+    switchUploadMode('avatar', 'file');
     document.getElementById('avatarPreview').src = avatar;
     document.getElementById('avatarPreview').style.display = 'block';
     document.getElementById('avatarFileName').textContent = '当前为 base64 存储';
+  } else if (avatar.startsWith('http')) {
+    switchUploadMode('avatar', 'url');
+    document.getElementById('avatarUrl').value = avatar;
+    document.getElementById('avatarUrlPreview').src = avatar;
+    document.getElementById('avatarUrlPreview').style.display = 'block';
+    document.getElementById('avatarUrlStatus').textContent = '✓ 当前使用图片链接';
+    document.getElementById('avatarUrlStatus').className = 'url-status ok';
   } else if (avatar) {
+    switchUploadMode('avatar', 'file');
     document.getElementById('avatarPreview').src = avatar;
     document.getElementById('avatarPreview').style.display = 'block';
     document.getElementById('avatarFileName').textContent = avatar.replace(/^\.\//, '');
   } else {
+    switchUploadMode('avatar', 'file');
     document.getElementById('avatarPreview').style.display = 'none';
     document.getElementById('avatarFileName').textContent = '';
   }
 
   const hero = p.heroImage || '';
   if (hero.startsWith('data:')) {
+    switchUploadMode('hero', 'file');
     document.getElementById('heroPreview').src = hero;
     document.getElementById('heroPreview').style.display = 'block';
     document.getElementById('heroFileName').textContent = '当前为 base64 存储';
+  } else if (hero.startsWith('http')) {
+    switchUploadMode('hero', 'url');
+    document.getElementById('heroUrl').value = hero;
+    document.getElementById('heroUrlPreview').src = hero;
+    document.getElementById('heroUrlPreview').style.display = 'block';
+    document.getElementById('heroUrlStatus').textContent = '✓ 当前使用图片链接';
+    document.getElementById('heroUrlStatus').className = 'url-status ok';
   } else if (hero) {
+    switchUploadMode('hero', 'file');
     document.getElementById('heroPreview').src = hero;
     document.getElementById('heroPreview').style.display = 'block';
     document.getElementById('heroFileName').textContent = hero.replace(/^\.\//, '');
   } else {
+    switchUploadMode('hero', 'file');
     document.getElementById('heroPreview').style.display = 'none';
     document.getElementById('heroFileName').textContent = '';
   }
@@ -2045,17 +2207,6 @@ function saveCurrentPage() {
     if (pageId === 'categories') { if (document.getElementById('categoryModal').classList.contains('open')) { saveCategory(); } else { saveToStorage(); toast('数据已保存', 'success'); } return; }
     saveToStorage();
     toast('数据已保存', 'success');
-  }
-}
-// ==================== Init ====================
-  const currentPage = document.querySelector('.page.active');
-  if (currentPage) {
-    const pageId = currentPage.id.replace('page-', '');
-    if (pageId === 'dashboard') renderDashboard();
-    if (pageId === 'works') renderWorks();
-    if (pageId === 'gallery') renderGallery();
-    if (pageId === 'categories') renderCategories();
-    if (pageId === 'profile') renderProfile();
   }
 }
 // ==================== Init ====================
