@@ -1056,7 +1056,43 @@ function loadData() {
     const raw = localStorage.getItem('siteData');
     if (raw) {
       siteData = JSON.parse(raw);
-      toast('已从 localStorage 加载数据', 'info');
+      // Merge missing fields from defaults
+      const defaultData = getDefaultData();
+      if (!siteData.profile) siteData.profile = {};
+      const p = siteData.profile;
+      const dp = defaultData.profile;
+      if (p.name === undefined) p.name = dp.name;
+      if (p.role === undefined) p.role = dp.role;
+      if (p.bio === undefined) p.bio = dp.bio;
+      if (p.email === undefined) p.email = dp.email;
+      if (p.location === undefined) p.location = dp.location;
+      if (p.avatar === undefined) p.avatar = dp.avatar;
+      if (p.heroImage === undefined) p.heroImage = dp.heroImage;
+      if (p.heroTitle === undefined) p.heroTitle = dp.heroTitle;
+      if (p.heroSubtitle === undefined) p.heroSubtitle = dp.heroSubtitle;
+      if (p.philosophy === undefined) p.philosophy = dp.philosophy;
+      if (p.social === undefined) p.social = dp.social;
+      if (p.phone === undefined) p.phone = dp.phone;
+      if (p.wechat === undefined) p.wechat = dp.wechat;
+      if (p.website === undefined) p.website = dp.website;
+      if (p.instagram === undefined) p.instagram = dp.instagram;
+      if (p.weibo === undefined) p.weibo = dp.weibo;
+      if (p.xiaohongshu === undefined) p.xiaohongshu = dp.xiaohongshu;
+      if (p.behance === undefined) p.behance = dp.behance;
+      if (p.experience === undefined) p.experience = dp.experience;
+      if (p.awards === undefined) p.awards = dp.awards;
+      if (!siteData.categories) siteData.categories = defaultData.categories;
+      // Migrate old categories format if needed
+      const firstCat = Object.values(siteData.categories)[0];
+      if (typeof firstCat === 'string') {
+        const newCats = {};
+        Object.entries(siteData.categories).forEach(([key, label]) => {
+          const colorMap = { all: '#999', portrait: '#D4A853', landscape: '#53A0D4', documentary: '#53D4A0', commercial: '#D453B8' };
+          newCats[key] = { label, color: colorMap[key] || '#999', key };
+        });
+        siteData.categories = newCats;
+      }
+      if (!siteData.works) siteData.works = defaultData.works;
     } else {
       siteData = getDefaultData();
       saveToStorage(false);
@@ -1957,6 +1993,7 @@ function saveProfile() {
   siteData.profile = p;
   if (saveDataSilent()) {
     toast('个人资料已保存', 'success');
+    renderProfile();
   } else {
     toast('个人资料保存失败，请检查数据大小', 'error');
   }
