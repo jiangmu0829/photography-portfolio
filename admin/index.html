@@ -1130,47 +1130,71 @@ let galleryView = 'grid';
 let categoryEditingKey = null;
 
 function loadData() {
-  const raw = localStorage.getItem('siteData');
-  if (raw) {
-    try { siteData = JSON.parse(raw); }
-    catch (e) { siteData = getDefaultData(); saveToStorage(); }
-    if (!siteData || typeof siteData !== 'object' || Array.isArray(siteData)) {
+  try {
+    const raw = localStorage.getItem('siteData');
+    console.log('[loadData] raw localStorage:', raw ? raw.substring(0, 100) : 'null');
+    
+    if (raw) {
+      try { siteData = JSON.parse(raw); }
+      catch (e) { 
+        console.error('[loadData] JSON parse failed:', e.message);
+        siteData = getDefaultData(); 
+        saveToStorage(); 
+      }
+      if (!siteData || typeof siteData !== 'object' || Array.isArray(siteData)) {
+        console.warn('[loadData] Invalid data, resetting to default');
+        siteData = getDefaultData();
+        saveToStorage();
+      }
+    } else {
+      console.log('[loadData] No localStorage data, using defaults');
       siteData = getDefaultData();
       saveToStorage();
     }
-  } else {
+    
+    // Ensure works is an array
+    if (!siteData.works || !Array.isArray(siteData.works)) {
+      siteData.works = [];
+    }
+    
+    // Migrate old format: categories was an array of strings
+    if (siteData.categories && Array.isArray(siteData.categories)) {
+      const newCats = {};
+      siteData.categories.forEach(key => {
+        if (key === 'all') {
+          newCats.all = { label: '全部', color: '#999', key: 'all' };
+        } else if (CATEGORIES[key]) {
+          newCats[key] = { ...CATEGORIES[key] };
+        } else {
+          newCats[key] = { label: key, color: '#999', key };
+        }
+      });
+      siteData.categories = newCats;
+      saveToStorage();
+    }
+    
+    // Ensure categories is a valid object
+    if (!siteData.categories || typeof siteData.categories !== 'object' || Array.isArray(siteData.categories)) {
+      siteData.categories = { ...CATEGORIES };
+      saveToStorage();
+    }
+    
+    console.log('[loadData] siteData loaded:', { works: siteData.works.length, categories: Object.keys(siteData.categories) });
+  } catch (e) {
+    console.error('[loadData] Critical error:', e.message);
     siteData = getDefaultData();
-    saveToStorage();
-  }
-  
-  // Migrate old format: categories was an array of strings → now an object {key: {label, color, key}}
-  if (siteData.categories && Array.isArray(siteData.categories)) {
-    const newCats = {};
-    siteData.categories.forEach(key => {
-      if (key === 'all') {
-        newCats.all = { label: '全部', color: '#999', key: 'all' };
-      } else if (CATEGORIES[key]) {
-        newCats[key] = { ...CATEGORIES[key] };
-      } else {
-        newCats[key] = { label: key, color: '#999', key };
-      }
-    });
-    siteData.categories = newCats;
-    saveToStorage();
-  }
-  
-  // Ensure categories is a valid object
-  if (!siteData.categories || typeof siteData.categories !== 'object' || Array.isArray(siteData.categories)) {
-    siteData.categories = { ...CATEGORIES };
-    saveToStorage();
   }
 }
 function saveToStorage() {
   try {
     localStorage.setItem('siteData', JSON.stringify(siteData));
-    document.getElementById('lastSaved').textContent = '已保存 ' + new Date().toLocaleTimeString();
+    const lastSaved = document.getElementById('lastSaved');
+    if (lastSaved) {
+      lastSaved.textContent = '已保存 ' + new Date().toLocaleTimeString();
+    }
     return true;
   } catch (e) {
+    console.error('[saveToStorage] Error:', e.message);
     toast('保存失败: ' + e.message, 'error');
     return false;
   }
@@ -1220,50 +1244,58 @@ function toggleSidebar() {
 
 // ==================== Dashboard ====================
 function renderDashboard() {
-  const works = siteData.works || [];
-  const cats = siteData.categories || CATEGORIES;
-  const counts = {};
+  try {
+    if (!siteData) {
+      console.error('[renderDashboard] siteData is null');
+      return;
+    }
+    const works = siteData.works || [];
+    const cats = siteData.categories || CATEGORIES;
+    const counts = {};
 
-  Object.keys(cats).forEach(key => {
-    if (key !== 'all') counts[key] = 0;
-  });
-  works.forEach(w => { if (counts[w.category] !== undefined) counts[w.category]++; });
+    Object.keys(cats).forEach(key => {
+      if (key !== 'all') counts[key] = 0;
+    });
+    works.forEach(w => { if (counts[w.category] !== undefined) counts[w.category]++; });
 
-  const statsGrid = document.getElementById('dashboardStats');
-  let statsHtml = `<div class="stat-card"><div class="label">作品总数</div><div class="value">${works.length}</div><div class="note">张精选作品${works.length >= 24 ? '（已满）' : ''}</div></div>`;
-  Object.entries(cats).forEach(([key, cat]) => {
-    if (key === 'all') return;
-    statsHtml += `<div class="stat-card"><div class="label">${cat.label}作品</div><div class="value" style="color:${cat.color}">${counts[key] || 0}</div><div class="note">张</div></div>`;
-  });
-  statsGrid.innerHTML = statsHtml;
+    const statsGrid = document.getElementById('dashboardStats');
+    let statsHtml = `<div class="stat-card"><div class="label">作品总数</div><div class="value">${works.length}</div><div class="note">张精选作品${works.length >= 24 ? '（已满）' : ''}</div></div>`;
+    Object.entries(cats).forEach(([key, cat]) => {
+      if (key === 'all') return;
+      statsHtml += `<div class="stat-card"><div class="label">${cat.label}作品</div><div class="value" style="color:${cat.color}">${counts[key] || 0}</div><div class="note">张</div></div>`;
+    });
+    statsGrid.innerHTML = statsHtml;
 
-  const total = works.length || 1;
-  const dist = Object.entries(cats)
-    .filter(([key]) => key !== 'all')
-    .map(([key, cat]) => ({ label: cat.label, key, count: counts[key] || 0, color: cat.color }));
+    const total = works.length || 1;
+    const dist = Object.entries(cats)
+      .filter(([key]) => key !== 'all')
+      .map(([key, cat]) => ({ label: cat.label, key, count: counts[key] || 0, color: cat.color }));
 
-  const distHtml = dist.map(d => {
-    const pct = Math.round((d.count / total) * 100);
-    return `<div class="dist-bar">
-      <div class="dist-bar-label">${d.label}</div>
-      <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${pct}%;background:${d.color};"></div></div>
-      <div class="dist-bar-value">${d.count}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('distributionBody').innerHTML = distHtml;
+    const distHtml = dist.map(d => {
+      const pct = Math.round((d.count / total) * 100);
+      return `<div class="dist-bar">
+        <div class="dist-bar-label">${d.label}</div>
+        <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${pct}%;background:${d.color};"></div></div>
+        <div class="dist-bar-value">${d.count}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('distributionBody').innerHTML = distHtml;
 
-  const recent = [...works].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6);
-  const tbody = document.getElementById('recentWorksTable');
-  tbody.innerHTML = recent.map(w => `
-    <tr>
-      <td><img class="table-thumb" src="${w.thumb || w.image}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\'table-thumb error\'>无图</div>'"></td>
-      <td>${w.title}</td>
-      <td><span class="badge badge-custom" style="${getBadgeStyle(w.category)}">${getCategoryLabel(w.category)}</span></td>
-      <td>${w.date || '-'}</td>
-    </tr>
-  `).join('');
-  if (!recent.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><p>暂无作品</p></td></tr>';
+    const recent = [...works].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6);
+    const tbody = document.getElementById('recentWorksTable');
+    tbody.innerHTML = recent.map(w => `
+      <tr>
+        <td><img class="table-thumb" src="${w.thumb || w.image}" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\'table-thumb error\'>无图</div>'"></td>
+        <td>${w.title}</td>
+        <td><span class="badge badge-custom" style="${getBadgeStyle(w.category)}">${getCategoryLabel(w.category)}</span></td>
+        <td>${w.date || '-'}</td>
+      </tr>
+    `).join('');
+    if (!recent.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><p>暂无作品</p></td></tr>';
+    }
+  } catch (e) {
+    console.error('[renderDashboard] Error:', e.message);
   }
 }
 // ==================== Works ====================
@@ -2087,15 +2119,18 @@ function saveCurrentPage() {
 }
 // ==================== Init ====================
 document.addEventListener('DOMContentLoaded', () => {
-  loadData();
-  setupDragDrop('avatarUpload', 'avatarInput');
-  setupDragDrop('heroUpload', 'heroInput');
-  setupDragDrop('workUpload', 'workInput');
-  setupDragDrop('importUpload', 'importInput');
-  renderDashboard();
-
-  // Listen for storage changes from other tabs
-  
+  try {
+    loadData();
+    setupDragDrop('avatarUpload', 'avatarInput');
+    setupDragDrop('heroUpload', 'heroInput');
+    setupDragDrop('workUpload', 'workInput');
+    setupDragDrop('importUpload', 'importInput');
+    renderDashboard();
+    console.log('[Init] Dashboard rendered successfully');
+  } catch (e) {
+    console.error('[Init] Critical init error:', e.message);
+    toast('页面初始化失败: ' + e.message, 'error');
+  }
 
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
