@@ -1052,93 +1052,23 @@ let galleryView = 'grid';
 let categoryEditingKey = null;
 
 function loadData() {
-  try {
-    const raw = localStorage.getItem('siteData');
-    if (raw) {
-      siteData = JSON.parse(raw);
-      // Merge missing fields from defaults
-      const defaultData = getDefaultData();
-      if (!siteData.profile) siteData.profile = {};
-      const p = siteData.profile;
-      const dp = defaultData.profile;
-      if (p.name === undefined) p.name = dp.name;
-      if (p.role === undefined) p.role = dp.role;
-      if (p.bio === undefined) p.bio = dp.bio;
-      if (p.email === undefined) p.email = dp.email;
-      if (p.location === undefined) p.location = dp.location;
-      if (p.avatar === undefined) p.avatar = dp.avatar;
-      if (p.heroImage === undefined) p.heroImage = dp.heroImage;
-      if (p.heroTitle === undefined) p.heroTitle = dp.heroTitle;
-      if (p.heroSubtitle === undefined) p.heroSubtitle = dp.heroSubtitle;
-      if (p.philosophy === undefined) p.philosophy = dp.philosophy;
-      if (p.social === undefined) p.social = dp.social;
-      if (p.phone === undefined) p.phone = dp.phone;
-      if (p.wechat === undefined) p.wechat = dp.wechat;
-      if (p.website === undefined) p.website = dp.website;
-      if (p.instagram === undefined) p.instagram = dp.instagram;
-      if (p.weibo === undefined) p.weibo = dp.weibo;
-      if (p.xiaohongshu === undefined) p.xiaohongshu = dp.xiaohongshu;
-      if (p.behance === undefined) p.behance = dp.behance;
-      if (p.experience === undefined) p.experience = dp.experience;
-      if (p.awards === undefined) p.awards = dp.awards;
-      if (!siteData.categories) siteData.categories = defaultData.categories;
-      // Migrate old categories format if needed
-      const firstCat = Object.values(siteData.categories)[0];
-      if (typeof firstCat === 'string') {
-        const newCats = {};
-        Object.entries(siteData.categories).forEach(([key, label]) => {
-          const colorMap = { all: '#999', portrait: '#D4A853', landscape: '#53A0D4', documentary: '#53D4A0', commercial: '#D453B8' };
-          newCats[key] = { label, color: colorMap[key] || '#999', key };
-        });
-        siteData.categories = newCats;
-      }
-      if (!siteData.works) siteData.works = defaultData.works;
-    } else {
-      siteData = getDefaultData();
-      saveToStorage(false);
-      toast('已加载默认数据', 'info');
-    }
-  } catch (e) {
-    console.error('loadData error', e);
+  const raw = localStorage.getItem('siteData');
+  if (raw) {
+    try { siteData = JSON.parse(raw); }
+    catch (e) { siteData = getDefaultData(); saveToStorage(); }
+  } else {
     siteData = getDefaultData();
-    saveToStorage(false);
-    toast('数据加载失败，已恢复默认', 'error');
+    saveToStorage();
   }
 }
 
-function saveToStorage(notify = true) {
+function saveToStorage() {
   try {
-    const dataStr = JSON.stringify(siteData);
-    const sizeBytes = new Blob([dataStr]).size;
-    const sizeMB = sizeBytes / 1024 / 1024;
-    if (sizeMB > 10) {
-      toast('数据大小超过 10MB，无法保存到 localStorage。建议：1) 导出数据备份 2) 点击"清理图片"删除部分 base64 图片 3) 或重置为默认数据', 'error');
-      throw new Error('Data size exceeds limit');
-    }
-    localStorage.setItem('siteData', dataStr);
+    localStorage.setItem('siteData', JSON.stringify(siteData));
     document.getElementById('lastSaved').textContent = '已保存 ' + new Date().toLocaleTimeString();
-    if (notify) {
-      window.dispatchEvent(new StorageEvent('storage', { key: 'siteData' }));
-    }
   } catch (e) {
     toast('保存失败: ' + e.message, 'error');
-    throw e;
   }
-}
-
-function saveData() {
-  try {
-    saveToStorage(true);
-    toast('数据已保存到 localStorage', 'success');
-  } catch (e) {
-    if (e.message !== 'Data size exceeds limit') {
-      toast('保存失败', 'error');
-    }
-  }
-}
-
-function saveDataSilent() {
-  try { saveToStorage(true); return true; } catch (e) { return false; }
 }
 
 // ==================== Toast ====================
@@ -1386,7 +1316,7 @@ function saveWork() {
       };
     }
   }
-  if (saveDataSilent()) {
+  if (saveToStorage()) {
     toast(!editingWorkId ? '作品已添加' : '作品已更新', 'success');
   } else {
     toast('保存失败，请检查数据大小', 'error');
@@ -1486,7 +1416,7 @@ function saveWork() {
       };
     }
   }
-  if (saveDataSilent()) {
+  if (saveToStorage()) {
     toast(!editingWorkId ? '作品已添加' : '作品已更新', 'success');
   } else {
     toast('保存失败，请检查数据大小', 'error');
@@ -1498,7 +1428,7 @@ function saveWork() {
 function deleteWork(id) {
   if (!confirm('确定要删除这张作品吗？')) return;
   siteData.works = (siteData.works || []).filter(w => w.id !== id);
-  saveDataSilent();
+  saveToStorage();
   renderAll();
   toast('作品已删除', 'success');
 }
@@ -1818,7 +1748,7 @@ function saveCategory() {
   }
   
   siteData.categories = cats;
-  if (saveDataSilent()) {
+  if (saveToStorage()) {
     toast(editKey ? '分类已更新' : '分类已添加', 'success');
   } else {
     toast('保存失败', 'error');
@@ -1838,7 +1768,7 @@ function deleteCategory(key) {
   const cats = siteData.categories || CATEGORIES;
   delete cats[key];
   siteData.categories = cats;
-  if (saveDataSilent()) {
+  if (saveToStorage()) {
     toast('分类已删除', 'success');
   } else {
     toast('保存失败', 'error');
@@ -1979,24 +1909,18 @@ function saveProfile() {
   if (socialText) {
     p.social = socialText.split('\n').map(line => {
       const idx = line.indexOf(',');
-      if (idx > 0) {
-        return { name: line.slice(0, idx).trim(), url: line.slice(idx + 1).trim() };
-      }
+      if (idx > 0) return { name: line.slice(0, idx).trim(), url: line.slice(idx + 1).trim() };
       return null;
     }).filter(Boolean);
-  } else {
-    p.social = [];
-  }
+  } else { p.social = []; }
 
   if (tempAvatar) p.avatar = tempAvatar;
   if (tempHero) p.heroImage = tempHero;
+
   siteData.profile = p;
-  if (saveDataSilent()) {
-    toast('个人资料已保存', 'success');
-    renderProfile();
-  } else {
-    toast('个人资料保存失败，请检查数据大小', 'error');
-  }
+  saveToStorage();
+  toast('个人资料已保存', 'success');
+  tempAvatar = null; tempHero = null;
 }
 
 // ==================== Data Management ====================
@@ -2034,7 +1958,7 @@ function confirmImport() {
   try {
     if (importedJson.profile && importedJson.works && Array.isArray(importedJson.works)) {
       siteData = importedJson;
-      saveToStorage(true);
+      saveToStorage();
       renderAll();
       toast('数据导入成功', 'success');
       importedJson = null;
@@ -2062,7 +1986,7 @@ function closeResetModal() {
 }
 function doReset() {
   siteData = getDefaultData();
-  saveToStorage(true);
+  saveToStorage();
   renderAll();
   closeResetModal();
   toast('已重置为默认数据', 'success');
@@ -2092,7 +2016,7 @@ function cleanImages() {
     count++;
   }
   if (count > 0) {
-    saveDataSilent();
+    saveToStorage();
     renderAll();
     toast('已清理 ' + count + ' 张 base64 图片，恢复为默认路径', 'success');
   } else {
@@ -2121,13 +2045,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDashboard();
 
   // Listen for storage changes from other tabs
-  window.addEventListener('storage', e => {
-    if (e.key === 'siteData') {
-      loadData();
-      renderAll();
-      toast('检测到外部数据更新，已自动刷新', 'info');
-    }
-  });
+  
 
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
