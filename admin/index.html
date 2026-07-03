@@ -1138,9 +1138,49 @@ function loadData() {
     siteData = getDefaultData();
     saveToStorage();
   }
+  
+  // Migrate old format: categories was an array of strings → now an object {key: {label, color, key}}
+  if (siteData.categories && Array.isArray(siteData.categories)) {
+    const newCats = {};
+    siteData.categories.forEach(key => {
+      if (key === 'all') {
+        newCats.all = { label: '全部', color: '#999', key: 'all' };
+      } else if (CATEGORIES[key]) {
+        newCats[key] = { ...CATEGORIES[key] };
+      } else {
+        newCats[key] = { label: key, color: '#999', key };
+      }
+    });
+    siteData.categories = newCats;
+    saveToStorage();
+  }
+  
+  // Ensure categories is a valid object
+  if (!siteData.categories || typeof siteData.categories !== 'object' || Array.isArray(siteData.categories)) {
+    siteData.categories = { ...CATEGORIES };
+    saveToStorage();
+  }
+}
+  const raw = localStorage.getItem('siteData');
+  if (raw) {
+    try { siteData = JSON.parse(raw); }
+    catch (e) { siteData = getDefaultData(); saveToStorage(); }
+  } else {
+    siteData = getDefaultData();
+    saveToStorage();
+  }
 }
 
 function saveToStorage() {
+  try {
+    localStorage.setItem('siteData', JSON.stringify(siteData));
+    document.getElementById('lastSaved').textContent = '已保存 ' + new Date().toLocaleTimeString();
+    return true;
+  } catch (e) {
+    toast('保存失败: ' + e.message, 'error');
+    return false;
+  }
+}
   try {
     localStorage.setItem('siteData', JSON.stringify(siteData));
     document.getElementById('lastSaved').textContent = '已保存 ' + new Date().toLocaleTimeString();
