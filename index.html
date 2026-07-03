@@ -1204,6 +1204,8 @@
           // Backfill missing profile fields
           const dp = defaultProfile;
           const p = appData.profile;
+          // Name migration: force update from old name to new name
+          if (p.name === '陈默') p.name = '江牧';
           if (!p.name) p.name = dp.name;
           if (!p.role) p.role = dp.role;
           if (!p.bio) p.bio = dp.bio;
@@ -1211,6 +1213,7 @@
           if (!p.location) p.location = dp.location;
           if (!p.avatar) p.avatar = dp.avatar;
           if (!p.heroImage) p.heroImage = dp.heroImage;
+          if (p.heroTitle === '陈默') p.heroTitle = '江牧';
           if (!p.heroTitle) p.heroTitle = dp.heroTitle;
           if (!p.heroSubtitle) p.heroSubtitle = dp.heroSubtitle;
           if (!p.philosophy) p.philosophy = dp.philosophy;
@@ -1491,6 +1494,7 @@
           currentFilter = btn.dataset.cat;
           renderPortfolio(container);
           setupImages();
+          setupScrollReveal();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       });
