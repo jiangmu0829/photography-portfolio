@@ -832,6 +832,29 @@ Instagram, https://instagram.com
       <!-- Data -->
       <div class="page" id="page-data">
         <div class="card">
+          <div class="card-header"><h2>云端数据库 (Supabase)</h2></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">配置 Supabase 云端数据库，实现数据跨设备同步和持久化存储。</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Supabase URL</label>
+                <input type="text" id="sbUrl" placeholder="https://xxxxx.supabase.co" onchange="saveSupabaseConfig()">
+              </div>
+              <div class="form-group">
+                <label>Supabase Anon Key</label>
+                <input type="text" id="sbKey" placeholder="eyJhbGciOiJIUzI1NiIs..." onchange="saveSupabaseConfig()">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary" onclick="testSupabaseConnection()">测试连接</button>
+              <button type="button" class="btn btn-primary" onclick="uploadToSupabase()">上传数据到云端</button>
+              <button type="button" class="btn btn-primary" onclick="downloadFromSupabase()">从云端下载数据</button>
+            </div>
+            <p class="hint" id="sbStatus">状态: 未配置</p>
+            <p class="hint">配置后，保存数据将自动同步到云端。访问者打开网站时会优先从云端读取最新数据。</p>
+          </div>
+        </div>
+        <div class="card">
           <div class="card-header"><h2>导出数据</h2></div>
           <div class="card-body">
             <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">将所有数据导出为 JSON 文件，用于备份或迁移。</p>
@@ -1129,8 +1152,24 @@ let galleryFilter = 'all';
 let galleryView = 'grid';
 let categoryEditingKey = null;
 
-function loadData() {
+async function loadData() {
   try {
+    // Try Supabase first
+    const cfg = getSupabaseConfig();
+    if (cfg) {
+      const loaded = await loadDataFromSupabase();
+      if (loaded) {
+        // Ensure data integrity after Supabase load
+        if (!siteData.works || !Array.isArray(siteData.works)) siteData.works = [];
+        if (!siteData.categories || typeof siteData.categories !== 'object' || Array.isArray(siteData.categories)) {
+          siteData.categories = { ...CATEGORIES };
+        }
+        console.log('[loadData] siteData loaded from Supabase:', { works: siteData.works.length, categories: Object.keys(siteData.categories) });
+        return;
+      }
+    }
+    
+    // Fallback to localStorage
     const raw = localStorage.getItem('siteData');
     console.log('[loadData] raw localStorage:', raw ? raw.substring(0, 100) : 'null');
     
@@ -1139,17 +1178,17 @@ function loadData() {
       catch (e) { 
         console.error('[loadData] JSON parse failed:', e.message);
         siteData = getDefaultData(); 
-        saveToStorage(); 
+        saveToStorageLocal(); 
       }
       if (!siteData || typeof siteData !== 'object' || Array.isArray(siteData)) {
         console.warn('[loadData] Invalid data, resetting to default');
         siteData = getDefaultData();
-        saveToStorage();
+        saveToStorageLocal();
       }
     } else {
       console.log('[loadData] No localStorage data, using defaults');
       siteData = getDefaultData();
-      saveToStorage();
+      saveToStorageLocal();
     }
     
     // Ensure works is an array
@@ -1192,12 +1231,141 @@ function saveToStorage() {
     if (lastSaved) {
       lastSaved.textContent = '已保存 ' + new Date().toLocaleTimeString();
     }
+    // Also sync to Supabase if configured
+    syncToSupabase();
     return true;
   } catch (e) {
     console.error('[saveToStorage] Error:', e.message);
     toast('保存失败: ' + e.message, 'error');
     return false;
   }
+}
+
+// ==================== Supabase Cloud Sync ====================
+function getSupabaseConfig() {
+  try {
+    const cfg = localStorage.getItem('supabaseConfig');
+    return cfg ? JSON.parse(cfg) : null;
+  } catch (e) { return null; }
+}
+
+function saveSupabaseConfig() {
+  const url = document.getElementById('sbUrl').value.trim();
+  const key = document.getElementById('sbKey').value.trim();
+  if (url && key) {
+    localStorage.setItem('supabaseConfig', JSON.stringify({ url, key }));
+    updateSupabaseStatus('已保存配置');
+  } else {
+    localStorage.removeItem('supabaseConfig');
+    updateSupabaseStatus('未配置');
+  }
+}
+
+function updateSupabaseStatus(msg) {
+  const el = document.getElementById('sbStatus');
+  if (el) el.textContent = '状态: ' + msg;
+}
+
+async function supabaseRequest(path, method, body) {
+  const cfg = getSupabaseConfig();
+  if (!cfg) return null;
+  try {
+    const res = await fetch(cfg.url + path, {
+      method: method,
+      headers: {
+        'apikey': cfg.key,
+        'Authorization': 'Bearer ' + cfg.key,
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'resolution=merge-duplicates' : 'return=representation'
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+    return await res.json();
+  } catch (e) {
+    console.error('[Supabase] Error:', e.message);
+    return null;
+  }
+}
+
+async function testSupabaseConnection() {
+  updateSupabaseStatus('测试中...');
+  const result = await supabaseRequest('/rest/v1/portfolio_data?id=eq.main&select=*', 'GET');
+  if (result !== null) {
+    updateSupabaseStatus('连接成功 ✓');
+    toast('Supabase 连接成功', 'success');
+  } else {
+    updateSupabaseStatus('连接失败 ✗');
+    toast('Supabase 连接失败，请检查 URL 和 Key', 'error');
+  }
+}
+
+async function syncToSupabase() {
+  const cfg = getSupabaseConfig();
+  if (!cfg) return;
+  try {
+    await supabaseRequest('/rest/v1/portfolio_data?id=eq.main', 'PATCH', {
+      id: 'main',
+      data: siteData,
+      updated_at: new Date().toISOString()
+    });
+    console.log('[Supabase] Synced successfully');
+  } catch (e) {
+    console.error('[Supabase] Sync failed:', e.message);
+  }
+}
+
+async function uploadToSupabase() {
+  updateSupabaseStatus('上传中...');
+  const result = await supabaseRequest('/rest/v1/portfolio_data', 'POST', {
+    id: 'main',
+    data: siteData,
+    updated_at: new Date().toISOString()
+  });
+  if (result !== null) {
+    updateSupabaseStatus('上传成功 ✓');
+    toast('数据已上传到云端', 'success');
+  } else {
+    updateSupabaseStatus('上传失败 ✗');
+    toast('上传失败，请检查配置', 'error');
+  }
+}
+
+async function downloadFromSupabase() {
+  updateSupabaseStatus('下载中...');
+  const result = await supabaseRequest('/rest/v1/portfolio_data?id=eq.main&select=*', 'GET');
+  if (result && result.length > 0 && result[0].data) {
+    siteData = result[0].data;
+    saveToStorageLocal();
+    renderAll();
+    updateSupabaseStatus('下载成功 ✓');
+    toast('云端数据已下载并应用', 'success');
+  } else {
+    updateSupabaseStatus('下载失败或云端无数据');
+    toast('下载失败或云端无数据', 'error');
+  }
+}
+
+function saveToStorageLocal() {
+  try {
+    localStorage.setItem('siteData', JSON.stringify(siteData));
+  } catch (e) {
+    console.error('[saveToStorageLocal] Error:', e.message);
+  }
+}
+
+async function loadDataFromSupabase() {
+  const result = await supabaseRequest('/rest/v1/portfolio_data?id=eq.main&select=*', 'GET');
+  if (result && result.length > 0 && result[0].data) {
+    siteData = result[0].data;
+    saveToStorageLocal();
+    console.log('[loadData] Loaded from Supabase');
+    return true;
+  }
+  return false;
 }
 
 // ==================== Toast ====================
@@ -2113,9 +2281,18 @@ function saveCurrentPage() {
   }
 }
 // ==================== Init ====================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   try {
-    loadData();
+    // Load Supabase config into UI
+    const cfg = getSupabaseConfig();
+    if (cfg) {
+      const urlEl = document.getElementById('sbUrl');
+      const keyEl = document.getElementById('sbKey');
+      if (urlEl) urlEl.value = cfg.url;
+      if (keyEl) keyEl.value = cfg.key;
+      updateSupabaseStatus('已配置');
+    }
+    await loadData();
     setupDragDrop('avatarUpload', 'avatarInput');
     setupDragDrop('heroUpload', 'heroInput');
     setupDragDrop('workUpload', 'workInput');

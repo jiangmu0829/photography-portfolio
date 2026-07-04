@@ -1206,11 +1206,53 @@
       return { profile: JSON.parse(JSON.stringify(defaultProfile)), works: JSON.parse(JSON.stringify(defaultWorks)), categories: JSON.parse(JSON.stringify(defaultCategories)) };
     }
 
+    /* ==================== Supabase Cloud ==================== */
+    function getSupabaseConfig() {
+      try {
+        const cfg = localStorage.getItem('supabaseConfig');
+        return cfg ? JSON.parse(cfg) : null;
+      } catch (e) { return null; }
+    }
+
+    async function supabaseRequest(path, method, body) {
+      const cfg = getSupabaseConfig();
+      if (!cfg) return null;
+      try {
+        const res = await fetch(cfg.url + path, {
+          method: method,
+          headers: {
+            'apikey': cfg.key,
+            'Authorization': 'Bearer ' + cfg.key,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: body ? JSON.stringify(body) : undefined
+        });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        console.error('[Supabase] Error:', e.message);
+        return null;
+      }
+    }
+
+    async function loadDataFromSupabase() {
+      const result = await supabaseRequest('/rest/v1/portfolio_data?id=eq.main&select=*', 'GET');
+      if (result && result.length > 0 && result[0].data) {
+        appData = result[0].data;
+        // Save to localStorage as cache
+        try { localStorage.setItem('siteData', JSON.stringify(appData)); } catch (e) {}
+        console.log('[loadData] Loaded from Supabase');
+        return true;
+      }
+      return false;
+    }
+
     /* ==================== Data Layer ==================== */
     let appData = null;
     let currentFilter = 'all';
 
-    function loadData() {
+    async function loadData() {
       const raw = localStorage.getItem('siteData');
       if (raw) {
         try { appData = JSON.parse(raw); }
@@ -1238,8 +1280,8 @@
     }
 
     /* ==================== Router ==================== */
-    function init() {
-      loadData();
+    async function init() {
+      await loadData();
       setupRouter();
       setupCursor();
       setupNav();
@@ -1255,9 +1297,9 @@
     }
 
     function setupStorageListener() {
-      window.addEventListener('storage', (e) => {
+      window.addEventListener('storage', async (e) => {
         if (e.key === 'siteData') {
-          loadData();
+          await loadData();
           render();
         }
       });
